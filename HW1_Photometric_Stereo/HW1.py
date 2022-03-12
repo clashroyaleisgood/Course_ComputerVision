@@ -1,10 +1,12 @@
+from sqlite3 import Row
 import cv2
 import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
 
-image_row = 0 
+image_row = 0
 image_col = 0
+IMAGE_FOLDER_PATH = [r'test/bunny/', r'test/star/', r'test/venus/']
 
 # visualizing the mask (size : "image width" * "image height")
 def mask_visualization(M):
@@ -68,7 +70,72 @@ def read_bmp(filepath):
     image_row , image_col = image.shape
     return image
 
+def SVD_inv(A):
+    '''
+    A: m x n matrix
+       3 x 2 for [[0 0], [0 0], [0 0]]
+    '''
+    m, n = A.shape
+    u, s, v = np.linalg.svd(A)  # mxm, mxn, nxn
+    l = abs(m - n)
+    s = np.append(1/s, [0]*l)
+    Ainv = v.T @ np.diag(s)[:n, :m] @ u.T
+
+    return Ainv
+
+def get_LightSource(filepath):
+    Light = []
+    with open(filepath, 'r') as f:
+        for line in f:
+            single_light = line.split()[1][1:-1].split(',')
+            Light += [[int(e) for e in single_light]]
+    return np.array(Light)
+
+def iter_bmp_paths(filepath):
+    for i in range(1, 7):
+        yield f'{filepath}pic{i}.bmp'
+
+def get_ImageMatrix(filepaths):
+    '''
+    return: (rows, cols, 6)
+    '''
+    I = []
+    for filepath in filepaths:
+        bmp = read_bmp(filepath)
+        bmp = bmp.astype('float64')
+        bmp /= 255
+        I += [bmp]
+    return np.stack(I, axis=2)
+
+def get_Normal(Linv, Images):
+    '''
+    Linv: LightInverse
+    Images: Images(rows, cols, 6)
+    return (rows, cols, 3)
+    '''
+    Normal = []
+    for y in range(image_row):
+        RowNormal = []
+        for x in range(image_col):
+            KdN = Linv @ Images[y][x]
+            norm = np.linalg.norm(KdN)
+            N = KdN / norm if norm > 0.000001 else KdN
+
+            RowNormal += [N]
+        Normal += [RowNormal]
+    Normal = np.array(Normal)
+    return Normal
 
 if __name__ == '__main__':
+    FolderPath = IMAGE_FOLDER_PATH[0]
+    LightPath = f'{FolderPath}/LightSource.txt'
+    LightSource = get_LightSource(LightPath)
+    LightInverse = SVD_inv(LightSource)
+
+    ImageMatrix = get_ImageMatrix(iter_bmp_paths(FolderPath))
+
+    N = get_Normal(LightInverse, ImageMatrix)
+    normal_visualization(N)
+
     # showing the windows of all visualization function
     plt.show()
