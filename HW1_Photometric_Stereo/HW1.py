@@ -161,10 +161,10 @@ def Reconstruct(Gradient):
             if not (Gradient[y][x]).any():
                 continue
             # Compute from left
-            # Z(x-1, y) + dz/dx(x-1, y)
+            # Z = Z(x-1, y) + dz/dx(x-1, y)
             Surface[y][x] += Surface[y][x-1] + Gradient[y][x-1][0]
-            # # Compute from top
-            # # Z(x, y-1) + dy/dx(x, y-1)
+            # Compute from top
+            # Z = Z(x, y-1) + dy/dx(x, y-1)
             Surface[y][x] += Surface[y-1][x] - Gradient[y-1][x][1]
             Surface[y][x] /= 2
 
@@ -173,11 +173,11 @@ def Reconstruct(Gradient):
         for x in range(image_col-2, 0, -1):
             if not (Gradient[y][x]).any():
                 continue
-            # Compute from left
-            # Z(x-1, y) + dz/dx(x-1, y)
+            # Compute from right
+            # Z = Z(x+1, y) - dz/dx(x, y)
             Surface2[y][x] += Surface2[y][x+1] - Gradient[y][x][0]
-            # # Compute from top
-            # # Z(x, y-1) + dy/dx(x, y-1)
+            # Compute from down
+            # Z = Z(x, y+1) - dy/dx(x, y)
             Surface2[y][x] += Surface2[y+1][x] + Gradient[y][x][1]
             Surface2[y][x] /= 2
 
