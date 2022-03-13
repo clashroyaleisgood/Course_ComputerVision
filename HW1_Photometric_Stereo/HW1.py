@@ -1,4 +1,3 @@
-from sqlite3 import Row
 import cv2
 import numpy as np
 import open3d as o3d
@@ -154,6 +153,35 @@ def Reconstruct(Gradient):
                            [dz/dx, dz/dy]
     return: (rows, cols) -> depth map
     '''
+    # Start from top down
+    Surface = np.zeros((image_row, image_col))
+
+    for y in range(1, image_row):
+        for x in range(1, image_col):
+            if not (Gradient[y][x]).any():
+                continue
+            # Compute from left
+            # Z(x-1, y) + dz/dx(x-1, y)
+            Surface[y][x] += Surface[y][x-1] + Gradient[y][x-1][0]
+            # # Compute from top
+            # # Z(x, y-1) + dy/dx(x, y-1)
+            Surface[y][x] += Surface[y-1][x] - Gradient[y-1][x][1]
+            Surface[y][x] /= 2
+
+    Surface2 = np.zeros((image_row, image_col))
+    for y in range(image_row-2, 0, -1):
+        for x in range(image_col-2, 0, -1):
+            if not (Gradient[y][x]).any():
+                continue
+            # Compute from left
+            # Z(x-1, y) + dz/dx(x-1, y)
+            Surface2[y][x] += Surface2[y][x+1] - Gradient[y][x][0]
+            # # Compute from top
+            # # Z(x, y-1) + dy/dx(x, y-1)
+            Surface2[y][x] += Surface2[y+1][x] + Gradient[y][x][1]
+            Surface2[y][x] /= 2
+
+    return (Surface + Surface2) / 2
 
 if __name__ == '__main__':
     FolderPath = IMAGE_FOLDER_PATH[0]
@@ -164,7 +192,10 @@ if __name__ == '__main__':
     ImageMatrix = get_ImageMatrix(iter_bmp_paths(FolderPath))
 
     N = get_Normal(LightInverse, ImageMatrix)
-    normal_visualization(N)
+    # normal_visualization(N)
 
+    G = get_Gradientxy(N)
+    Z = Reconstruct(G)
+    depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
