@@ -88,7 +88,11 @@ def get_LightSource(filepath):
     with open(filepath, 'r') as f:
         for line in f:
             single_light = line.split()[1][1:-1].split(',')
-            Light += [[int(e) for e in single_light]]
+            single_light = np.array([int(e) for e in single_light])
+            norm = np.linalg.norm(single_light)
+            single_light = single_light.astype('float64') / norm
+
+            Light += [single_light]
     return np.array(Light)
 
 def iter_bmp_paths(filepath):
@@ -111,7 +115,7 @@ def get_Normal(Linv, Images):
     '''
     Linv: LightInverse
     Images: Images(rows, cols, 6)
-    return (rows, cols, 3)
+    return: (rows, cols, 3)
     '''
     Normal = []
     for y in range(image_row):
@@ -125,6 +129,31 @@ def get_Normal(Linv, Images):
         Normal += [RowNormal]
     Normal = np.array(Normal)
     return Normal
+
+def get_Gradientxy(Normal):
+    '''
+    Normal: (rows, cols, 3)
+    return: (rows, cols, 2)
+                         [dz/dx, dz/dy]
+    '''
+    Gradient = []
+    for y in range(image_row):
+        RowGradient = []
+        for x in range(image_col):
+            Na, Nb, Nc = Normal[y][x]
+            dzdx = -Na/Nc if Nc > 0.000001 else 0
+            dzdy = -Nb/Nc if Nc > 0.000001 else 0
+            RowGradient += [[dzdx, dzdy]]
+        Gradient += [RowGradient]
+    Gradient = np.array(Gradient)
+    return Gradient
+
+def Reconstruct(Gradient):
+    '''
+    Gradient: (rows, cols, 2)
+                           [dz/dx, dz/dy]
+    return: (rows, cols) -> depth map
+    '''
 
 if __name__ == '__main__':
     FolderPath = IMAGE_FOLDER_PATH[0]
