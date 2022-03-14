@@ -312,6 +312,13 @@ def ReconstructDR(Gradient, Mask):
             ) / 2
     return Surface
 
+def AverageZ(*Zlist):
+    # Z = np.zeros((image_row, image_col))
+    # for z in Zlist:
+    #     Z += z
+    Z = sum(Zlist)
+    return Z / len(Zlist)
+
 if __name__ == '__main__':
     target = 'bunny' # bunny, star, venus
     FolderPath = f'test/{target}/'
@@ -326,7 +333,12 @@ if __name__ == '__main__':
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Z = ReconstructTL(G, Mask)
+    Ztl = ReconstructTL(G, Mask)
+    Ztr = ReconstructTR(G, Mask)
+    Zdl = ReconstructDL(G, Mask)
+    Zdr = ReconstructDR(G, Mask)
+    Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
+
     depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
