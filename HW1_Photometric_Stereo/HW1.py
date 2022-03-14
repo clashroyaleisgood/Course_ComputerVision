@@ -265,6 +265,53 @@ def ReconstructC(Gradient, Mask):
             ) / 2
     return Surface
 
+def ReconstructTL(Gradient, Mask):
+    Surface = np.zeros((image_row, image_col))
+    for y in range(1, image_row):                       # from Up
+        for x in range(1, image_col):                   # from Left
+            if not Mask[y][x]:
+                continue
+            Surface[y][x] = (
+                Surface[y][x-1] + Gradient[y][x-1][0] + # from Left
+                Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
+            ) / 2
+    return Surface
+
+def ReconstructTR(Gradient, Mask):
+    Surface = np.zeros((image_row, image_col))
+    for y in range(1, image_row):                       # from Up
+        for x in range(image_col-2, 0, -1):             # from Right
+            if not Mask[y][x]:
+                continue
+            Surface[y][x] = (
+                Surface[y][x+1] - Gradient[y][x][0] +   # form Right
+                Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
+            ) / 2
+    return Surface
+
+def ReconstructDL(Gradient, Mask):
+    Surface = np.zeros((image_row, image_col))
+    for y in range(image_row-2, 0, -1):                 # from Down
+        for x in range(1, image_col):                   # from Left
+            if not Mask[y][x]:
+                continue
+            Surface[y][x] = (
+                Surface[y][x-1] + Gradient[y][x-1][0] + # from Left
+                Surface[y+1][x] + Gradient[y][x][1]     # from Down
+            ) / 2
+    return Surface
+
+def ReconstructDR(Gradient, Mask):
+    Surface = np.zeros((image_row, image_col))
+    for y in range(image_row-2, 0, -1):                 # from Down
+        for x in range(image_col-2, 0, -1):             # from Right
+            if not Mask[y][x]:
+                continue
+            Surface[y][x] = (
+                Surface[y][x+1] - Gradient[y][x][0] +   # form Right
+                Surface[y+1][x] + Gradient[y][x][1]     # from Down
+            ) / 2
+    return Surface
 
 if __name__ == '__main__':
     FolderPath = IMAGE_FOLDER_PATH[0]
@@ -279,9 +326,9 @@ if __name__ == '__main__':
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Z = ReconstructC(G, Mask)
-    # depth_visualization(Z)
-    # # showing the windows of all visualization function
-    # plt.show()
-    save_ply(Z, 'bunny.ply')
-    show_ply('bunny.ply')
+    Z = ReconstructTL(G, Mask)
+    depth_visualization(Z)
+    # showing the windows of all visualization function
+    plt.show()
+    # save_ply(Z, 'bunny.ply')
+    # show_ply('bunny.ply')
