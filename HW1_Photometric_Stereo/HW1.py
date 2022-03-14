@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 
 image_row = 0
 image_col = 0
-IMAGE_FOLDER_PATH = [r'test/bunny/', r'test/star/', r'test/venus/']
 
 # visualizing the mask (size : "image width" * "image height")
 def mask_visualization(M):
@@ -314,7 +313,8 @@ def ReconstructDR(Gradient, Mask):
     return Surface
 
 if __name__ == '__main__':
-    FolderPath = IMAGE_FOLDER_PATH[0]
+    target = 'bunny' # bunny, star, venus
+    FolderPath = f'test/{target}/'
     LightPath = f'{FolderPath}/LightSource.txt'
     LightSource = get_LightSource(LightPath)
     LightInverse = SVD_inv(LightSource)
@@ -330,5 +330,5 @@ if __name__ == '__main__':
     depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
-    # save_ply(Z, 'bunny.ply')
-    # show_ply('bunny.ply')
+    # save_ply(Z, f'{target}.ply')
+    # show_ply(f'{target}.ply')
