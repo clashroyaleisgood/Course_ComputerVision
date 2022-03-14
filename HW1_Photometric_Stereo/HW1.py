@@ -159,7 +159,7 @@ def get_Gradientxy(Normal):
     Gradient = np.array(Gradient)
     return Gradient
 
-def Reconstruct(Gradient):
+def Reconstruct(Gradient, Mask):
     '''
     Gradient: (rows, cols, 2)
                            [dz/dx, dz/dy]
@@ -170,7 +170,7 @@ def Reconstruct(Gradient):
 
     for y in range(1, image_row):
         for x in range(1, image_col):
-            if not (Gradient[y][x]).any():
+            if not Mask[y][x]:
                 continue
             # Compute from left
             # Z = Z(x-1, y) + dz/dx(x-1, y)
@@ -183,7 +183,7 @@ def Reconstruct(Gradient):
     Surface2 = np.zeros((image_row, image_col))
     for y in range(image_row-2, 0, -1):
         for x in range(image_col-2, 0, -1):
-            if not (Gradient[y][x]).any():
+            if not Mask[y][x]:
                 continue
             # Compute from right
             # Z = Z(x+1, y) - dz/dx(x, y)
@@ -195,7 +195,7 @@ def Reconstruct(Gradient):
 
     return (Surface + Surface2) / 2
 
-def ReconstructC(Gradient):
+def ReconstructC(Gradient, Mask):
     '''
     Reconstruct FROM CENTER
     Gradient: (rows, cols, 2)
@@ -208,20 +208,30 @@ def ReconstructC(Gradient):
     Surface = np.zeros((image_row, image_col))
     # mid -> right
     for x in range(x_center+1, image_col):
+        if not Mask[y_center][x]:
+            continue
         Surface[y_center][x] = Surface[y_center][x-1] + Gradient[y_center][x-1][0]
     # mid -> down
     for x in range(x_center-1, 0, -1):
+        if not Mask[y_center][x]:
+            continue
         Surface[y_center][x] = Surface[y_center][x+1] - Gradient[y_center][x][0]
     # mid -> left
     for y in range(y_center+1, image_row):
+        if not Mask[y][x_center]:
+            continue
         Surface[y][x_center] = Surface[y-1][x_center] - Gradient[y-1][x_center][1]
     # mid -> up
     for y in range(y_center-1, 0, -1):
+        if not Mask[y][x_center]:
+            continue
         Surface[y][x_center] = Surface[y+1][x_center] + Gradient[y][x_center][1]
     
     # mid -> right_down
     for y in range(y_center+1, image_row):
         for x in range(x_center+1, image_col):
+            if not Mask[y][x]:
+                continue
             Surface[y][x] = (
                 Surface[y][x-1] + Gradient[y][x-1][0] + # form Left
                 Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
@@ -229,6 +239,8 @@ def ReconstructC(Gradient):
     # mid -> right_up
     for y in range(y_center-1, 0, -1):
         for x in range(x_center+1, image_col):
+            if not Mask[y][x]:
+                continue
             Surface[y][x] = (
                 Surface[y][x-1] + Gradient[y][x-1][0] + # from Left
                 Surface[y+1][x] + Gradient[y][x][1]     # from Down
@@ -236,6 +248,8 @@ def ReconstructC(Gradient):
     # mid -> left_up
     for y in range(y_center-1, 0, -1):
         for x in range(x_center-1, 0, -1):
+            if not Mask[y][x]:
+                continue
             Surface[y][x] = (
                 Surface[y][x+1] - Gradient[y][x][0] +   # form Right
                 Surface[y+1][x] + Gradient[y][x][1]     # from Down
@@ -243,6 +257,8 @@ def ReconstructC(Gradient):
     # mid -> left_down
     for y in range(y_center+1, image_row):
         for x in range(x_center-1, 0, -1):
+            if not Mask[y][x]:
+                continue
             Surface[y][x] = (
                 Surface[y][x+1] - Gradient[y][x][0] +   # form Right
                 Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
@@ -257,12 +273,13 @@ if __name__ == '__main__':
     LightInverse = SVD_inv(LightSource)
 
     ImageMatrix = get_ImageMatrix(iter_bmp_paths(FolderPath))
+    Mask = get_Mask(iter_bmp_paths(FolderPath))
 
     N = get_Normal(LightInverse, ImageMatrix)
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Z = ReconstructC(G)
+    Z = Reconstruct(G, Mask)
     depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
