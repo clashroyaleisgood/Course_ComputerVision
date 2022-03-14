@@ -279,7 +279,9 @@ if __name__ == '__main__':
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Z = Reconstruct(G, Mask)
-    depth_visualization(Z)
-    # showing the windows of all visualization function
-    plt.show()
+    Z = ReconstructC(G, Mask)
+    # depth_visualization(Z)
+    # # showing the windows of all visualization function
+    # plt.show()
+    save_ply(Z, 'bunny.ply')
+    show_ply('bunny.ply')
