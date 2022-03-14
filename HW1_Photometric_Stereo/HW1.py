@@ -319,6 +319,24 @@ def AverageZ(*Zlist):
     Z = sum(Zlist)
     return Z / len(Zlist)
 
+def get_WeightMaps():
+    '''
+    return: Weight[y][x] for
+    Wtl, Wtr, Wdl, Wdr
+
+    2...1
+    ...
+    1...0
+    (Wtl + Wdr)/2 = [[111]...[111]]
+    weighted 後不會讓整體數值過大 (*2) 或過小 (/2)
+    '''
+    v = np.linspace(2, 1, image_col)
+    Wtl = np.linspace(v, v - 1, image_row)
+    v = np.linspace(2, 1, image_row)
+    Wtr = np.rot90(np.linspace(v, v - 1, image_col))
+
+    return Wtl, Wtr, np.rot90(np.rot90(Wtr)), np.rot90(np.rot90(Wtl))
+
 if __name__ == '__main__':
     target = 'bunny' # bunny, star, venus
     FolderPath = f'test/{target}/'
@@ -337,7 +355,11 @@ if __name__ == '__main__':
     Ztr = ReconstructTR(G, Mask)
     Zdl = ReconstructDL(G, Mask)
     Zdr = ReconstructDR(G, Mask)
-    Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
+
+    Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
+
+    Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
+    # Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
 
     depth_visualization(Z)
     # showing the windows of all visualization function
