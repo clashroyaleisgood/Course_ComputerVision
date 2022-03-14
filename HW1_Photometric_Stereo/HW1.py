@@ -195,6 +195,61 @@ def Reconstruct(Gradient):
 
     return (Surface + Surface2) / 2
 
+def ReconstructC(Gradient):
+    '''
+    Reconstruct FROM CENTER
+    Gradient: (rows, cols, 2)
+                           [dz/dx, dz/dy]
+    return: (rows, cols) -> depth map
+    '''
+    x_center = image_col // 2
+    y_center = image_row // 2
+
+    Surface = np.zeros((image_row, image_col))
+    # mid -> right
+    for x in range(x_center+1, image_col):
+        Surface[y_center][x] = Surface[y_center][x-1] + Gradient[y_center][x-1][0]
+    # mid -> down
+    for x in range(x_center-1, 0, -1):
+        Surface[y_center][x] = Surface[y_center][x+1] - Gradient[y_center][x][0]
+    # mid -> left
+    for y in range(y_center+1, image_row):
+        Surface[y][x_center] = Surface[y-1][x_center] - Gradient[y-1][x_center][1]
+    # mid -> up
+    for y in range(y_center-1, 0, -1):
+        Surface[y][x_center] = Surface[y+1][x_center] + Gradient[y][x_center][1]
+    
+    # mid -> right_down
+    for y in range(y_center+1, image_row):
+        for x in range(x_center+1, image_col):
+            Surface[y][x] = (
+                Surface[y][x-1] + Gradient[y][x-1][0] + # form Left
+                Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
+            ) / 2
+    # mid -> right_up
+    for y in range(y_center-1, 0, -1):
+        for x in range(x_center+1, image_col):
+            Surface[y][x] = (
+                Surface[y][x-1] + Gradient[y][x-1][0] + # from Left
+                Surface[y+1][x] + Gradient[y][x][1]     # from Down
+            ) / 2
+    # mid -> left_up
+    for y in range(y_center-1, 0, -1):
+        for x in range(x_center-1, 0, -1):
+            Surface[y][x] = (
+                Surface[y][x+1] - Gradient[y][x][0] +   # form Right
+                Surface[y+1][x] + Gradient[y][x][1]     # from Down
+            ) / 2
+    # mid -> left_down
+    for y in range(y_center+1, image_row):
+        for x in range(x_center-1, 0, -1):
+            Surface[y][x] = (
+                Surface[y][x+1] - Gradient[y][x][0] +   # form Right
+                Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
+            ) / 2
+    return Surface
+
+
 if __name__ == '__main__':
     FolderPath = IMAGE_FOLDER_PATH[0]
     LightPath = f'{FolderPath}/LightSource.txt'
@@ -207,7 +262,7 @@ if __name__ == '__main__':
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Z = Reconstruct(G)
+    Z = ReconstructC(G)
     depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
