@@ -228,8 +228,8 @@ def ReconstructC(Gradient, Mask):
         Surface[y][x_center] = Surface[y+1][x_center] + Gradient[y][x_center][1]
     
     # mid -> right_down
-    for y in range(y_center+1, image_row):
-        for x in range(x_center+1, image_col):
+    for y in range(y_center+1, image_row):              # from Up
+        for x in range(x_center+1, image_col):          # form Left
             if not Mask[y][x]:
                 continue
             Surface[y][x] = (
@@ -237,8 +237,8 @@ def ReconstructC(Gradient, Mask):
                 Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
             ) / 2
     # mid -> right_up
-    for y in range(y_center-1, 0, -1):
-        for x in range(x_center+1, image_col):
+    for y in range(y_center-1, 0, -1):                  # from Down
+        for x in range(x_center+1, image_col):          # form Left
             if not Mask[y][x]:
                 continue
             Surface[y][x] = (
@@ -246,8 +246,8 @@ def ReconstructC(Gradient, Mask):
                 Surface[y+1][x] + Gradient[y][x][1]     # from Down
             ) / 2
     # mid -> left_up
-    for y in range(y_center-1, 0, -1):
-        for x in range(x_center-1, 0, -1):
+    for y in range(y_center-1, 0, -1):                  # from Down
+        for x in range(x_center-1, 0, -1):              # form Right
             if not Mask[y][x]:
                 continue
             Surface[y][x] = (
@@ -255,8 +255,8 @@ def ReconstructC(Gradient, Mask):
                 Surface[y+1][x] + Gradient[y][x][1]     # from Down
             ) / 2
     # mid -> left_down
-    for y in range(y_center+1, image_row):
-        for x in range(x_center-1, 0, -1):
+    for y in range(y_center+1, image_row):              # from Up
+        for x in range(x_center-1, 0, -1):              # form Right
             if not Mask[y][x]:
                 continue
             Surface[y][x] = (
