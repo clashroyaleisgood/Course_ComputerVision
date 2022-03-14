@@ -110,6 +110,18 @@ def get_ImageMatrix(filepaths):
         I += [bmp]
     return np.stack(I, axis=2)
 
+def get_Mask(filepaths):
+    '''
+    SHOULD be excuted after get_ImageMatrix()
+    return : (rows, cols) -> bool
+    '''
+    Mask = np.zeros((image_row, image_col), dtype=np.bool_)
+
+    for filepath in filepaths:
+        bmp = read_bmp(filepath)
+        Mask = np.greater(bmp, 0) | Mask
+    return Mask
+
 def get_Normal(Linv, Images):
     '''
     Linv: LightInverse
