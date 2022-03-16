@@ -263,6 +263,7 @@ def ReconstructC(Gradient, Mask):
                 Surface[y][x+1] - Gradient[y][x][0] +   # form Right
                 Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
             ) / 2
+    Surface[Mask!=0] -= Surface.min()
     return Surface
 
 def ReconstructTL(Gradient, Mask):
@@ -338,6 +339,14 @@ def get_WeightMaps():
 
     return Wtl, Wtr, np.rot90(np.rot90(Wtr)), np.rot90(np.rot90(Wtl))
 
+def get_CentralWeightMaps():
+    x = np.linspace(-1, 1, image_col)
+    y = np.linspace(-1, 1, image_row)
+    xs, ys = np.meshgrid(x, y, sparse=True)
+    zs = np.sqrt(xs**2 + ys**2)
+    zs = zs.max() - zs
+    return zs
+
 if __name__ == '__main__':
     target = 'bunny' # bunny, star, venus
     FolderPath = f'test/{target}/'
@@ -356,11 +365,14 @@ if __name__ == '__main__':
     Ztr = ReconstructTR(G, Mask)
     Zdl = ReconstructDL(G, Mask)
     Zdr = ReconstructDR(G, Mask)
+    Zc = ReconstructC(G, Mask)
 
     Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
+    Wc = get_CentralWeightMaps()
 
-    Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
     # Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
+    # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
+    Z = (AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr) + Wc*Zc) / (Wc + 1)
 
     depth_visualization(Z)
     # showing the windows of all visualization function
