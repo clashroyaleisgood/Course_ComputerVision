@@ -384,7 +384,7 @@ if __name__ == '__main__':
     # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
     # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
     # -------------------------------------------------------------------------
-    # Strategy 5: Weighted average(Strategy 4, Strategy 2)
+    # Strategy 5: Weighted average(Strategy 4, Strategy 2) Wc = max - distance to center
     # Ztl = ReconstructTL(G, Mask)
     # Ztr = ReconstructTR(G, Mask)
     # Zdl = ReconstructDL(G, Mask)
