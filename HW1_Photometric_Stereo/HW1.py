@@ -205,6 +205,7 @@ def ReconstructC(Gradient, Mask):
     y_center = image_row // 2
 
     Surface = np.zeros((image_row, image_col))
+    Surface[y_center][x_center] = 0.0001
     # mid -> right
     for x in range(x_center+1, image_col):
         if not Mask[y_center][x]:
