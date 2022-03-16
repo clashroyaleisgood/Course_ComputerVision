@@ -361,14 +361,6 @@ if __name__ == '__main__':
     # normal_visualization(N)
 
     G = get_Gradientxy(N)
-    Ztl = ReconstructTL(G, Mask)
-    Ztr = ReconstructTR(G, Mask)
-    Zdl = ReconstructDL(G, Mask)
-    Zdr = ReconstructDR(G, Mask)
-    Zc = ReconstructC(G, Mask)
-
-    Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
-    Wc = get_CentralWeightMaps()
 
     # -------------------------------------------------------------------------
     # Strategy 1: from top left + down right
@@ -398,7 +390,8 @@ if __name__ == '__main__':
     # Zdl = ReconstructDL(G, Mask)
     # Zdr = ReconstructDR(G, Mask)
     # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
-    Z = (AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr) + Wc*Zc) / (Wc + 1)
+    # Wc = get_CentralWeightMaps()
+    # Z = (AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr) + Wc*Zc) / (Wc + 1)
     # -------------------------------------------------------------------------
 
     depth_visualization(Z)
