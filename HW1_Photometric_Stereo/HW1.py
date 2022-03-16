@@ -370,12 +370,40 @@ if __name__ == '__main__':
     Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
     Wc = get_CentralWeightMaps()
 
+    # -------------------------------------------------------------------------
+    # Strategy 1: from top left + down right
+    # Z = Reconstruct(G, Mask)
+    # -------------------------------------------------------------------------
+    # Strategy 2: from center
+    # Z = ReconstructC(G, Mask)
+    # -------------------------------------------------------------------------
+    # Strategy 3: average(top left, top right, bottom left, bottom right)
+    # Ztl = ReconstructTL(G, Mask)
+    # Ztr = ReconstructTR(G, Mask)
+    # Zdl = ReconstructDL(G, Mask)
+    # Zdr = ReconstructDR(G, Mask)
     # Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
+    # -------------------------------------------------------------------------
+    # Strategy 4: weighted average in Strategy 3, W = sum(abs(x-start) + abs(y-start))
+    # Ztl = ReconstructTL(G, Mask)
+    # Ztr = ReconstructTR(G, Mask)
+    # Zdl = ReconstructDL(G, Mask)
+    # Zdr = ReconstructDR(G, Mask)
+    # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
     # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
+    # -------------------------------------------------------------------------
+    # Strategy 5: Weighted average(Strategy 4, Strategy 2)
+    # Ztl = ReconstructTL(G, Mask)
+    # Ztr = ReconstructTR(G, Mask)
+    # Zdl = ReconstructDL(G, Mask)
+    # Zdr = ReconstructDR(G, Mask)
+    # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
     Z = (AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr) + Wc*Zc) / (Wc + 1)
+    # -------------------------------------------------------------------------
 
     depth_visualization(Z)
     # showing the windows of all visualization function
     plt.show()
+
     # save_ply(Z, f'{target}.ply')
     # show_ply(f'{target}.ply')
