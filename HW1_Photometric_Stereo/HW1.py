@@ -348,7 +348,7 @@ def get_CentralWeightMaps():
     return zs
 
 if __name__ == '__main__':
-    target = 'bunny' # bunny, star, venus
+    target = 'venus' # bunny, star, venus
     FolderPath = f'test/{target}/'
     LightPath = f'{FolderPath}/LightSource.txt'
     LightSource = get_LightSource(LightPath)
@@ -364,7 +364,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------------------
     # Strategy 1: from top left + down right
-    # Z = Reconstruct(G, Mask)
+    Z = Reconstruct(G, Mask)
     # -------------------------------------------------------------------------
     # Strategy 2: from center
     # Z = ReconstructC(G, Mask)
@@ -384,19 +384,21 @@ if __name__ == '__main__':
     # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
     # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
     # -------------------------------------------------------------------------
+    # Fail to complete
     # Strategy 5: Weighted average(Strategy 4, Strategy 2) Wc = max - distance to center
     # Ztl = ReconstructTL(G, Mask)
     # Ztr = ReconstructTR(G, Mask)
     # Zdl = ReconstructDL(G, Mask)
     # Zdr = ReconstructDR(G, Mask)
     # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
+    # Zc = ReconstructC(G, Mask)
     # Wc = get_CentralWeightMaps()
-    # Z = (AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr) + Wc*Zc) / (Wc + 1)
+    # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr, Zc)
     # -------------------------------------------------------------------------
 
-    depth_visualization(Z)
-    # showing the windows of all visualization function
-    plt.show()
+    # depth_visualization(Z)
+    # # showing the windows of all visualization function
+    # plt.show()
 
-    # save_ply(Z, f'{target}.ply')
-    # show_ply(f'{target}.ply')
+    save_ply(Z, f'{target}.ply')
+    show_ply(f'{target}.ply')
