@@ -348,7 +348,7 @@ def get_CentralWeightMaps():
     return zs
 
 if __name__ == '__main__':
-    target = 'venus' # bunny, star, venus
+    target = 'bunny' # bunny, star, venus
     FolderPath = f'test/{target}/'
     LightPath = f'{FolderPath}/LightSource.txt'
     LightSource = get_LightSource(LightPath)
@@ -364,7 +364,7 @@ if __name__ == '__main__':
 
     # -------------------------------------------------------------------------
     # Strategy 1: from top left + down right
-    Z = Reconstruct(G, Mask)
+    # Z = Reconstruct(G, Mask)
     # -------------------------------------------------------------------------
     # Strategy 2: from center
     # Z = ReconstructC(G, Mask)
@@ -377,12 +377,12 @@ if __name__ == '__main__':
     # Z = AverageZ(Ztl, Ztr, Zdl, Zdr)
     # -------------------------------------------------------------------------
     # Strategy 4: weighted average in Strategy 3, W = sum(abs(x-start) + abs(y-start))
-    # Ztl = ReconstructTL(G, Mask)
-    # Ztr = ReconstructTR(G, Mask)
-    # Zdl = ReconstructDL(G, Mask)
-    # Zdr = ReconstructDR(G, Mask)
-    # Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
-    # Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
+    Ztl = ReconstructTL(G, Mask)
+    Ztr = ReconstructTR(G, Mask)
+    Zdl = ReconstructDL(G, Mask)
+    Zdr = ReconstructDR(G, Mask)
+    Wtl, Wtr, Wdl, Wdr = get_WeightMaps()
+    Z = AverageZ(Ztl*Wtl, Ztr*Wtr, Zdl*Wdl, Zdr*Wdr)
     # -------------------------------------------------------------------------
     # Fail to complete
     # Strategy 5: Weighted average(Strategy 4, Strategy 2) Wc = max - distance to center
