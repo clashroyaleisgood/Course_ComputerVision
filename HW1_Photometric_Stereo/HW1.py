@@ -27,7 +27,7 @@ def normal_visualization(N):
 # visualizing the depth on 2D image
 # D is the depth map which contains "only the z value" of all pixels (size : "image width" * "image height")
 def depth_visualization(D):
-    D_map = np.copy(np.reshape(D, (image_row,image_col)))
+    D_map = np.copy(np.reshape(D, (image_row, image_col)))
     # D = np.uint8(D)
     plt.figure()
     plt.imshow(D_map)
@@ -38,10 +38,10 @@ def depth_visualization(D):
 
 # convert depth map to point cloud and save it to ply file
 # Z is the depth map which contains "only the z value" of all pixels (size : "image width" * "image height")
-def save_ply(Z,filepath):
-    Z_map = np.reshape(Z, (image_row,image_col)).copy()
-    data = np.zeros((image_row*image_col,3),dtype=np.float32)
-    # let all point float on a base plane 
+def save_ply(Z, filepath):
+    Z_map = np.reshape(Z, (image_row, image_col)).copy()
+    data = np.zeros((image_row*image_col, 3), dtype=np.float32)
+    # let all point float on a base plane
     baseline_val = np.min(Z_map)
     Z_map[np.where(Z_map == 0)] = baseline_val
     for i in range(image_row):
@@ -53,7 +53,7 @@ def save_ply(Z,filepath):
     # output to ply file
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(data)
-    o3d.io.write_point_cloud(filepath, pcd,write_ascii=True)
+    o3d.io.write_point_cloud(filepath, pcd, write_ascii=True)
 
 # show the result of saved ply file
 def show_ply(filepath):
@@ -64,8 +64,8 @@ def show_ply(filepath):
 def read_bmp(filepath):
     global image_row
     global image_col
-    image = cv2.imread(filepath,cv2.IMREAD_GRAYSCALE)
-    image_row , image_col = image.shape
+    image = cv2.imread(filepath, cv2.IMREAD_GRAYSCALE)
+    image_row, image_col = image.shape
     return image
 
 def SVD_inv(A):
@@ -226,7 +226,7 @@ def ReconstructC(Gradient, Mask):
         if not Mask[y][x_center]:
             continue
         Surface[y][x_center] = Surface[y+1][x_center] + Gradient[y][x_center][1]
-    
+
     # mid -> right_down
     for y in range(y_center+1, image_row):              # from Up
         for x in range(x_center+1, image_col):          # form Left
@@ -263,7 +263,7 @@ def ReconstructC(Gradient, Mask):
                 Surface[y][x+1] - Gradient[y][x][0] +   # form Right
                 Surface[y-1][x] - Gradient[y-1][x][1]   # from Up
             ) / 2
-    Surface[Mask!=0] -= Surface.min()
+    Surface[Mask != 0] -= Surface.min()
     return Surface
 
 def ReconstructTL(Gradient, Mask):
@@ -348,7 +348,7 @@ def get_CentralWeightMaps():
     return zs
 
 if __name__ == '__main__':
-    target = 'bunny' # bunny, star, venus
+    target = 'bunny'  # bunny, star, venus
     FolderPath = f'test/{target}/'
     LightPath = f'{FolderPath}/LightSource.txt'
     LightSource = get_LightSource(LightPath)
