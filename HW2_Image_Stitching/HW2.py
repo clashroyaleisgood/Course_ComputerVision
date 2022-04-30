@@ -31,11 +31,17 @@ def im_show():
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
+def get_PicturePath(prefix: str, i: int) -> str:
+    return f'{prefix}test/m{i}.jpg'
+
 if __name__ == '__main__':
-    # the example of image window
-    # creat_im_window("Result", img)
-    # im_show()
+    prefix = 'HW2_Image_Stitching/' if True else ''
+    img_name = get_PicturePath(prefix, 1)
+    image, image_gray = read_img(img_name)
+    
+    creat_im_window('rgb', image)
+    creat_im_window('gray', image_gray)
+    im_show()
 
     # you can use this function to store the result
     # cv2.imwrite("result.jpg", img)
-    pass
