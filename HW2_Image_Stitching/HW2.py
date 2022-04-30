@@ -46,6 +46,8 @@ def kNN(featureImage1, featureImage2, threshold=1.33):
     calc 2-NN from f1 to f2
     do Lowe's Ratio test
         to eliminate bad pairs
+    dist1 < 0.75 * dist2 -> good
+    if dist2 < 1.33 * dist1 -> bad
     
     feature1: [
         [point1 feature],
@@ -98,6 +100,29 @@ def kNN(featureImage1, featureImage2, threshold=1.33):
             print(f'add{idx1, min_idx2}')
     return good_matches
 
+def get_HomographyMatrix(matches4):
+    '''
+    M: [m1, m2, m3, m4]
+    mi_1~4: [[x1, y1], [x1h, y1h]]
+    return homography matrix
+    '''
+
+    mat_A = []
+    for match in matches4:
+        (x1, y1), (x1_p, y1_p) = match
+        mat_A += [
+            [x1, y1,  1,  0,  0,  0, -x1_p * x1, -x1_p * y1, -x1_p],
+            [ 0,  0,  0, x1, y1,  1, -y1_p * x1, -y1_p * y1, -y1_p]
+        ]
+
+    u, s, vh = np.linalg.svd(mat_A)
+
+    H = vh[8]  # The "rows" of vh are the eigenvectors of ATA
+    H = H / H[8]  # normalize A33 to 1
+    H = H.reshape((3, 3))
+    return H
+    
+
 def RANSAC(matches, kp1, f1, kp2, f2):
     '''
     random choose 4 from matches
@@ -105,7 +130,17 @@ def RANSAC(matches, kp1, f1, kp2, f2):
         and counting supports
     return best Transform Mat
     '''
-    pass
+    rand4number = [1, 2, 3, 4]
+    match4 = []
+    for i in range(4):
+        idx = rand4number[i]
+        m = [
+            kp1[matches[idx][0]].pt,
+            kp2[matches[idx][1]].pt
+        ]  # [[x1, y1], [x1h, y1h]]
+        match4 += [m]
+
+    H = get_HomographyMatrix(match4)
 
 
 def combine(image1, image2):
@@ -119,9 +154,11 @@ def combine(image1, image2):
 
     matches = kNN(f1, f2)  # about 610
     
-    bestMat = RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
+    RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
 
-    pos = kp1[0].pt  # (x, y)
+    # bestMat = RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
+
+    # pos = kp1[0].pt  # (x, y)
 
 if __name__ == '__main__':
     prefix = 'HW2_Image_Stitching/' if True else ''
