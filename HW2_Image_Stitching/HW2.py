@@ -22,7 +22,7 @@ def img_to_gray(img):
 # create a window to show the image
 # It will show all the windows after you call im_show()
 # Remember to call im_show() in the end of main
-def creat_im_window(window_name, img):
+def create_im_window(window_name, img):
     cv2.imshow(window_name, img)
 
 # show the all window you call before im_show()
@@ -39,8 +39,8 @@ if __name__ == '__main__':
     img_name = get_PicturePath(prefix, 1)
     image, image_gray = read_img(img_name)
     
-    creat_im_window('rgb', image)
-    creat_im_window('gray', image_gray)
+    create_im_window('rgb', image)
+    create_im_window('gray', image_gray)
     im_show()
 
     # you can use this function to store the result
