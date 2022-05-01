@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 import random
 import math
 import sys
@@ -98,6 +99,8 @@ def kNN(featureImage1, featureImage2, threshold=1.33):
         if not find_close_dist2:
             good_matches += [[idx1, min_idx2]]
             print(f'add{idx1, min_idx2}')
+        if len(good_matches) > 200:
+            break
     return good_matches
 
 def get_HomographyMatrix(matches4):
@@ -130,7 +133,7 @@ def RANSAC(matches, kp1, f1, kp2, f2):
         and counting supports
     return best Transform Mat
     '''
-    rand4number = [1, 2, 3, 4]
+    rand4number = np.random.choice(len(matches), 4)
     match4 = []
     for i in range(4):
         idx = rand4number[i]
@@ -141,6 +144,15 @@ def RANSAC(matches, kp1, f1, kp2, f2):
         match4 += [m]
 
     H = get_HomographyMatrix(match4)
+
+    p1 = np.array([e for e in kp1[matches[rand4number[3]][0]].pt] + [1])
+    p2 = np.array([e for e in kp2[matches[rand4number[3]][1]].pt] + [1])
+    print(p1)
+    print(p2)
+    print(H @ p1)
+    # for idx1, idx2 in matches:
+    #     # H * kp1[idx1].pt -> kp2[idx2].pt
+    #     pass
 
 
 def combine(image1, image2):
@@ -154,7 +166,19 @@ def combine(image1, image2):
 
     matches = kNN(f1, f2)  # about 610
     
-    RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
+    id1, id2 = matches[100]
+    # print(f'pos1: {kp1[id1].pt}')
+    # print(f'pos2: {kp2[id2].pt}')
+    kp1s = [kp1[match[0]] for match in matches[100: 120]]
+    kp2s = [kp2[match[1]] for match in matches[100: 120]]
+    image1 = cv2.drawKeypoints(image1, kp1s, image1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    image2 = cv2.drawKeypoints(image2, kp2s, image2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+
+    create_im_window('im1', image1)
+    create_im_window('im2', image2)
+    im_show()
+
+    # RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
 
     # bestMat = RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
 
@@ -165,15 +189,15 @@ if __name__ == '__main__':
     SIFT = cv2.SIFT_create()
 
     img_name = get_PicturePath(prefix, 1)
-    _, image1 = read_img(img_name)
+    image1, image1_gray = read_img(img_name)
     img_name = get_PicturePath(prefix, 2)
-    _, image2 = read_img(img_name)
+    image2, image2_gray = read_img(img_name)
 
-    combine(image1, image2)
+    combine(image1_gray, image2_gray)
 
     # create_im_window('rgb', image)
-    create_im_window('gray', image1)
-    im_show()
+    # create_im_window('gray', image1_gray)
+    # im_show()
 
     # you can use this function to store the result
     # cv2.imwrite("result.jpg", img)
