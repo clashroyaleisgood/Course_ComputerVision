@@ -189,11 +189,28 @@ def project(H, p):
     p_proj = p_proj[:2] / p_proj[2]
     return p_proj
 
-def combine(image_gray1, image1, image_gray2, image2):
+def blending(warped1, warped2):
+    '''
+    combine 2 warped image with same size
+    '''
+    final = warped1.copy()
+    for i in range(final.shape[0]):
+        for j in range(final.shape[1]):
+            if warped2[i][j][0] != 0:
+                final[i][j] = final[i][j] / 2 + warped2[i][j] / 2
+            if warped1[i][j][0] == 0:
+                final[i][j] = warped2[i][j]
+
+    return final
+
+
+def combine(image1, image2):
     '''
     transform(image1) + image2
     transform from image1 to image2 <- knn from image1 to image2
     '''
+    image_gray1 = img_to_gray(image1)
+    image_gray2 = img_to_gray(image2)
     kp1, f1 = SIFT.detectAndCompute(image_gray1, None)
     # 3196, (3196, 128)
     kp2, f2 = SIFT.detectAndCompute(image_gray2, None)
@@ -240,27 +257,29 @@ def combine(image_gray1, image1, image_gray2, image2):
     warped_2 = cv2.warpPerspective(src=image2, M=affine,     dsize=size_proj)
     # NOTICE that: dsize: (x_size, y_size)
 
-    create_im_window('w1', warped_1)
-    create_im_window('w2', warped_2)
-    create_im_window('g1', image1)
-    create_im_window('g2', image2)
-    im_show()
+    blended = blending(warped_1, warped_2)
+
+    return blended
 
 
 if __name__ == '__main__':
     prefix = 'HW2_Image_Stitching/' if True else ''
     SIFT = cv2.SIFT_create()
 
-    img_name = get_PicturePath(prefix, 1)
-    image1, image1_gray = read_img(img_name)
-    img_name = get_PicturePath(prefix, 2)
-    image2, image2_gray = read_img(img_name)
+    images = []
+    for i in range(1, 5):
+        image_name = get_PicturePath(prefix, i)
+        image, _ = read_img(image_name)
+        images += [image]
 
-    combine(image1_gray, image1, image2_gray, image2)
+    image_01 = combine(images[0], images[1])
+    image_23 = combine(images[2], images[3])
+    final = combine(image_01, image_23)
 
-    # create_im_window('rgb', image)
-    # create_im_window('gray', image1_gray)
-    # im_show()
+    create_im_window('12', image_01)
+    create_im_window('34', image_23)
+    create_im_window('all', final)
+    im_show()
 
     # you can use this function to store the result
     # cv2.imwrite("result.jpg", img)
