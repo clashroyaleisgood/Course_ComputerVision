@@ -189,28 +189,62 @@ def project(H, p):
     p_proj = p_proj[:2] / p_proj[2]
     return p_proj
 
-def combine(image1, image2):
+def combine(image_gray1, image1, image_gray2, image2):
     '''
     transform(image1) + image2
     transform from image1 to image2 <- knn from image1 to image2
     '''
-    kp1, f1 = SIFT.detectAndCompute(image1, None)
+    kp1, f1 = SIFT.detectAndCompute(image_gray1, None)
     # 3196, (3196, 128)
-    kp2, f2 = SIFT.detectAndCompute(image2, None)
+    kp2, f2 = SIFT.detectAndCompute(image_gray2, None)
 
     matches = kNN(f1, f2)  # about 610
 
     # matches correctness test
     # kp1s = [kp1[match[0]] for match in matches[100: 120]]
     # kp2s = [kp2[match[1]] for match in matches[100: 120]]
-    # image1 = cv2.drawKeypoints(image1, kp1s, image1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    # image2 = cv2.drawKeypoints(image2, kp2s, image2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # image_gray1 = cv2.drawKeypoints(image_gray1, kp1s, image_gray1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # image_gray2 = cv2.drawKeypoints(image_gray2, kp2s, image_gray2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    # create_im_window('im1', image1)
-    # create_im_window('im2', image2)
+    # create_im_window('im1', image_gray1)
+    # create_im_window('im2', image_gray2)
     # im_show()
 
     H = RANSAC(matches, kp1=kp1, kp2=kp2)
+
+    ori_size = image_gray1.shape  # (756, 1008, 3)
+    # (0, 0), (size[1]-1, 0), (0, size[0]-1), (size[1]-1, size[0]-1)
+    points4 = np.array([
+        [            0,             0],
+        [ori_size[1]-1,             0],
+        [            0, ori_size[0]-1],
+        [ori_size[1]-1, ori_size[0]-1]
+    ])
+    min_x = min_y = 0
+    max_y, max_x = ori_size
+    for p in points4:
+        x, y = project(H, p)
+        min_x = x if x < min_x else min_x
+        min_y = y if y < min_y else min_y
+        max_x = x if x > max_x else max_x
+        max_y = y if y > max_y else max_y
+    size_proj = (int(max_x - min_x), int(max_y - min_y))
+
+    affine = np.array([  # x moves from min_x to 0, y form min_y to 0
+        [1, 0, -min_x],
+        [0, 1, -min_y],
+        [0, 0, 1]
+    ])
+
+    warped_1 = cv2.warpPerspective(src=image1, M=affine @ H, dsize=size_proj)
+    warped_2 = cv2.warpPerspective(src=image2, M=affine,     dsize=size_proj)
+    # NOTICE that: dsize: (x_size, y_size)
+
+    create_im_window('w1', warped_1)
+    create_im_window('w2', warped_2)
+    create_im_window('g1', image1)
+    create_im_window('g2', image2)
+    im_show()
 
 
 if __name__ == '__main__':
@@ -222,7 +256,7 @@ if __name__ == '__main__':
     img_name = get_PicturePath(prefix, 2)
     image2, image2_gray = read_img(img_name)
 
-    combine(image1_gray, image2_gray)
+    combine(image1_gray, image1, image2_gray, image2)
 
     # create_im_window('rgb', image)
     # create_im_window('gray', image1_gray)
