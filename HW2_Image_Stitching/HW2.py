@@ -124,7 +124,7 @@ def get_HomographyMatrix(matches4):
     return H
 
 
-def RANSAC(matches, kp1, kp2, threshold=3, repeat=5):
+def RANSAC(matches, kp1, kp2, threshold=5, repeat=20):
     '''
     random choose 4 from matches
     do PrespectiveTransform(all matches)
@@ -134,8 +134,9 @@ def RANSAC(matches, kp1, kp2, threshold=3, repeat=5):
     max_support = 0
     max_H = None
     
-    for _ in range(repeat):
+    for r in range(repeat):
         rand4number = np.random.choice(len(matches), 4)
+        print(f'try {r}: rand select {rand4number}')
         match4 = []
         for i in range(4):
             idx = rand4number[i]
@@ -170,9 +171,23 @@ def RANSAC(matches, kp1, kp2, threshold=3, repeat=5):
                 support += 1
         # end calc suport
         if support > max_support:
+            max_support = support
             max_H = H
+        print(f'support = {support}')
+    print("support for H", max_support)
     return max_H
 
+def project(H, p):
+    '''
+    H: (3, 3) Homography matrix
+    p: (3,) or (2,) are OK
+    return  p_proj (2,)
+    '''
+    if p.shape[0] == 2:
+        p = np.array((*p, 1))
+    p_proj = H @ p
+    p_proj = p_proj[:2] / p_proj[2]
+    return p_proj
 
 def combine(image1, image2):
     '''
@@ -197,10 +212,6 @@ def combine(image1, image2):
 
     H = RANSAC(matches, kp1=kp1, kp2=kp2)
 
-
-    # bestMat = RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
-
-    # pos = kp1[0].pt  # (x, y)
 
 if __name__ == '__main__':
     prefix = 'HW2_Image_Stitching/' if True else ''
