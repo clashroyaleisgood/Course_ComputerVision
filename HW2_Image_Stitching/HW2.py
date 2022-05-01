@@ -42,7 +42,7 @@ def dist(feature1, featureImage2):
     distance1to2 = feature1 - featureImage2
     return np.linalg.norm(distance1to2, axis=1)
 
-def kNN(featureImage1, featureImage2, threshold=1.33):
+def kNN(featureImage1, featureImage2, threshold=2):
     '''
     calc 2-NN from f1 to f2
     do Lowe's Ratio test
@@ -124,7 +124,7 @@ def get_HomographyMatrix(matches4):
     return H
 
 
-def RANSAC(matches, kp1, kp2, threshold=5, repeat=20):
+def RANSAC(matches, kp1, kp2, threshold=3, repeat=200):
     '''
     random choose 4 from matches
     do PrespectiveTransform(all matches)
@@ -136,7 +136,7 @@ def RANSAC(matches, kp1, kp2, threshold=5, repeat=20):
     
     for r in range(repeat):
         rand4number = np.random.choice(len(matches), 4)
-        print(f'try {r}: rand select {rand4number}')
+        # print(f'try {r}: rand select {rand4number}')
         match4 = []
         for i in range(4):
             idx = rand4number[i]
@@ -173,7 +173,7 @@ def RANSAC(matches, kp1, kp2, threshold=5, repeat=20):
         if support > max_support:
             max_support = support
             max_H = H
-        print(f'support = {support}')
+        print(f'try {r}: support = {support}')
     print("support for H", max_support)
     return max_H
 
