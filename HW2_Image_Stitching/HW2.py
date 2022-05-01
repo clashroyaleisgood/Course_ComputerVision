@@ -99,8 +99,6 @@ def kNN(featureImage1, featureImage2, threshold=1.33):
         if not find_close_dist2:
             good_matches += [[idx1, min_idx2]]
             print(f'add{idx1, min_idx2}')
-        if len(good_matches) > 200:
-            break
     return good_matches
 
 def get_HomographyMatrix(matches4):
@@ -145,11 +143,15 @@ def RANSAC(matches, kp1, f1, kp2, f2):
 
     H = get_HomographyMatrix(match4)
 
-    p1 = np.array([e for e in kp1[matches[rand4number[3]][0]].pt] + [1])
-    p2 = np.array([e for e in kp2[matches[rand4number[3]][1]].pt] + [1])
-    print(p1)
-    print(p2)
-    print(H @ p1)
+    # correctness test
+    # p1 = np.array([e for e in kp1[matches[rand4number[3]][0]].pt] + [1]).reshape((3, 1))
+    # p2 = np.array([e for e in kp2[matches[rand4number[3]][1]].pt] + [1]).reshape((3, 1))
+    # print(p1)
+    # print(p2)
+    # p3 = H @ p1
+    # p3 /= p3[2]
+    # print(p3)
+
     # for idx1, idx2 in matches:
     #     # H * kp1[idx1].pt -> kp2[idx2].pt
     #     pass
@@ -165,20 +167,18 @@ def combine(image1, image2):
     kp2, f2 = SIFT.detectAndCompute(image2, None)
 
     matches = kNN(f1, f2)  # about 610
-    
-    id1, id2 = matches[100]
-    # print(f'pos1: {kp1[id1].pt}')
-    # print(f'pos2: {kp2[id2].pt}')
-    kp1s = [kp1[match[0]] for match in matches[100: 120]]
-    kp2s = [kp2[match[1]] for match in matches[100: 120]]
-    image1 = cv2.drawKeypoints(image1, kp1s, image1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    image2 = cv2.drawKeypoints(image2, kp2s, image2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    create_im_window('im1', image1)
-    create_im_window('im2', image2)
-    im_show()
+    # matches correctness test
+    # kp1s = [kp1[match[0]] for match in matches[100: 120]]
+    # kp2s = [kp2[match[1]] for match in matches[100: 120]]
+    # image1 = cv2.drawKeypoints(image1, kp1s, image1, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # image2 = cv2.drawKeypoints(image2, kp2s, image2, None, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    # RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
+    # create_im_window('im1', image1)
+    # create_im_window('im2', image2)
+    # im_show()
+
+    RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
 
     # bestMat = RANSAC(matches, kp1=kp1, f1=f1, kp2=kp2, f2=f2)
 
