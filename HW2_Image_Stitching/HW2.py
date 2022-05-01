@@ -189,19 +189,53 @@ def project(H, p):
     p_proj = p_proj[:2] / p_proj[2]
     return p_proj
 
-def blending(warped1, warped2):
+def get_Mask(image, threshold=20):
     '''
-    combine 2 warped image with same size
+    image: (H, W, c)
+    return (H, W), value = 255 if gray[i][j] > threshold else 0
     '''
-    final = warped1.copy()
-    for i in range(final.shape[0]):
-        for j in range(final.shape[1]):
-            if warped2[i][j][0] != 0:
-                final[i][j] = final[i][j] / 2 + warped2[i][j] / 2
-            if warped1[i][j][0] == 0:
-                final[i][j] = warped2[i][j]
+    gray = img_to_gray(image)
+    mask = np.zeros(image.shape[:2], dtype=np.uint8)
 
-    return final
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            if gray[i][j] > threshold:
+                mask[i][j] = 255
+            else:
+                mask[i][j] = 0
+    mask = cv2.GaussianBlur(mask, (101, 101), 0)
+    for i in range(image.shape[0]):
+        for j in range(image.shape[1]):
+            if gray[i][j] > threshold:
+                pass
+            else:
+                mask[i][j] = 0
+    return mask
+
+def average_Masks(mask1, mask2):
+    '''
+    mask1, mask2: (H, W), uint8 0 | 255 mask
+    return 0~1 smooth float mask
+    '''
+    total = np.zeros((mask1.shape), dtype=np.int32)
+
+    Masks = [mask1, mask2]
+    for mask in Masks:
+        total += mask
+
+    for i in range(2):
+        Masks[i] = Masks[i] / total
+        Masks[i] = Masks[i].astype(np.float) / 255.0
+        Masks[i] = Masks[i].reshape((*Masks[i].shape, 1))
+
+    return Masks[0], Masks[1]
+
+def blending(warped1, warped2):
+    mask1, mask2 = get_Mask(warped1), get_Mask(warped2)
+    mask1, mask2 = average_Masks(mask1, mask2)
+    result = mask1 * warped1 + mask2 * warped2
+    result = (result * 255).astype(np.uint8)
+    return result
 
 
 def combine(image1, image2):
@@ -267,19 +301,20 @@ if __name__ == '__main__':
     SIFT = cv2.SIFT_create()
 
     images = []
-    for i in range(1, 5):
+    for i in range(1, 9):
         image_name = get_PicturePath(prefix, i)
         image, _ = read_img(image_name)
         images += [image]
 
-    image_01 = combine(images[0], images[1])
-    image_23 = combine(images[2], images[3])
-    final = combine(image_01, image_23)
+    # image_01 = combine(images[0], images[1])
+    # image_23 = combine(images[2], images[3])
+    # image_0123 = combine(image_01, image_23)
+    # image_45 = combine(images[4], images[5])
+    # image_67 = combine(images[6], images[7])
+    # image_4567 = combine(image_45, image_67)
+    # result = combine(image_0123, image_4567)
+    result = images[7]
+    for i in range(6, -1, -1):
+        result = combine(images[i], result)
 
-    create_im_window('12', image_01)
-    create_im_window('34', image_23)
-    create_im_window('all', final)
-    im_show()
-
-    # you can use this function to store the result
-    # cv2.imwrite("result.jpg", img)
+    cv2.imwrite(f'{prefix}result.jpg', result)
