@@ -306,15 +306,20 @@ if __name__ == '__main__':
         image, _ = read_img(image_name)
         images += [image]
 
-    # image_01 = combine(images[0], images[1])
-    # image_23 = combine(images[2], images[3])
-    # image_0123 = combine(image_01, image_23)
-    # image_45 = combine(images[4], images[5])
-    # image_67 = combine(images[6], images[7])
-    # image_4567 = combine(image_45, image_67)
-    # result = combine(image_0123, image_4567)
-    result = images[7]
-    for i in range(6, -1, -1):
-        result = combine(images[i], result)
+    image_01 = combine(images[0], images[1])
+    cv2.imwrite(f'{prefix}stitching_results/comb01.jpg', image_01)
 
-    cv2.imwrite(f'{prefix}result.jpg', result)
+    image_23 = combine(images[2], images[3])
+    image_0123 = combine(image_01, image_23)
+    cv2.imwrite(f'{prefix}stitching_results/comb0123.jpg', image_0123)
+
+    image_45 = combine(images[4], images[5])
+    image_67 = combine(images[6], images[7])
+    image_4567 = combine(image_45, image_67)
+    result = combine(image_0123, image_4567)
+
+    # result = images[7]
+    # for i in range(6, -1, -1):
+    #     result = combine(images[i], result)
+
+    cv2.imwrite(f'{prefix}stitching_results/comb01234567.jpg', result)
