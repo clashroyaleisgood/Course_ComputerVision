@@ -19,4 +19,20 @@ def getDepthMap(disparity, B=None, f=None):
         B: two camera distance
         d: disparity map value
     '''
-    pass
+    disparity[disparity == 0] = 1
+    disparity = 255 / disparity
+
+    disparity = disparity * 32  # changable?
+    disparity[disparity > 255] = 255
+
+    disparity = disparity.astype(np.uint8)
+
+    return disparity
+
+if __name__ == '__main__':
+    disparity = cv2.imread(r'Final_Project\\Dataset\\tsukuba_new\\truedisp.row3.col3.jpg', cv2.IMREAD_GRAYSCALE)
+    depth = getDepthMap(disparity)
+
+    cv2.imshow('Depth', depth)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
