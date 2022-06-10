@@ -26,5 +26,40 @@ def convert(folder_name):
 
         cv2.imwrite(os.path.join(NewDirectory, NewFilename), image)
 
+def splitGIT(folder_name):
+    '''
+    split *.gif
+    to images/{folder_name}_[1, 2, 3, ...].jpg
+    '''
+
+    folderpath = os.path.join(os.path.dirname(__file__), folder_name)
+    filename = os.listdir(folderpath)[0]
+    fullpath = os.path.join(folderpath, filename)
+
+    print(f'Spliting {filename} to {filename}/stereo/*.jpg')
+
+    folderpath_stored = os.path.join(folderpath, 'stereo')
+    os.makedirs(folderpath_stored, exist_ok=True)
+
+    counter = 1
+
+    # image = cv2.imread(os.path.join(folderpath, filename))
+    cap = cv2.VideoCapture(fullpath)
+
+    while True:
+        ret, image = cap.read()
+        if ret:
+            cv2.imwrite(os.path.join(folderpath_stored,
+                        f'{folder_name}_{counter}.jpg'), image)  # jpg is good enough
+            counter += 1
+            # cv2.imshow('Window', image)
+            # cv2.waitKey(0)
+            # cv2.destroyAllWindows()
+        else:
+            break
+
+    cap.release()
+
 if __name__ == '__main__':
-    convert('tsukuba')
+    # convert('tsukuba')
+    splitGIT('map')
