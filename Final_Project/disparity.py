@@ -29,7 +29,10 @@ def getDepthMap(disparity, mode, B=None, f=None, norm=None):
         param: norm
     '''
     if mode == 'Accurate':
-        pass
+        disp_min = getDisparityMin(disparity)       # needed?
+        disparity[disparity < disp_min] = disp_min  # needed?
+        disparity = (1 / disparity) * B * f
+
     elif mode == 'Related':
         # showHistogram(disparity)
 
@@ -100,6 +103,6 @@ def visualizeDepthMap(depth_map):
 if __name__ == '__main__':
     dataset = getDataset('tsukuba')
     disparity = dataset.getDisparity()
-    depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
+    depth = getDepthMap(disparity, mode='Accurate', B = 1, f = 1)
 
     visualizeDepthMap(depth)
