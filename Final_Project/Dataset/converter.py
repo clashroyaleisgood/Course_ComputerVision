@@ -1,6 +1,23 @@
 import cv2
 import os
 
+'''
+place folder like:
+|-- Dataset/
+|   |-- bull/
+|       |-- bull_o_a.gif  # stereo images
+|       |-- bull_o_d.jpg  # disparity map
+|-- converter.py
+
+splitGIF() will create
+|-- Dataset/
+|   |-- bull/
+        |-- stereo/
+            |-- bull_1.jpg
+            |-- bull_2.jpg
+            |-- ...
+'''
+
 def convert(folder_name):
     '''
     conver all {folder_name}/[*ppm, *pgm] 
@@ -62,4 +79,4 @@ def splitGIT(folder_name):
 
 if __name__ == '__main__':
     # convert('tsukuba')
-    splitGIT('map')
+    splitGIT('bull')
