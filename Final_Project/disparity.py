@@ -10,7 +10,32 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
     method in ['BlockSearch', 'DP']
     '''
     # some_block_search_implementation(image_l, image_r)
-    pass
+    if method == 'DP':
+        return disparityDPmethod(image_l, image_r)
+
+def disparityDPmethod(image_l, image_r):
+    for line in range(image_l.shape[0]):
+        relation = getRelation(image_l[line], image_r[line])
+        # DP solver
+
+def getRelation(line_l, line_r):
+    '''
+    line_l, line_r: ndarray(width, 3)
+    return relation
+    relation[i][j] = norm(line_l[i] - line_r[j])
+    '''
+    n = line_l.shape[0]
+    left = np.copy(line_l).astype(np.float)
+    right = np.copy(line_r).astype(np.float)
+    relation = np.zeros((n, n))
+
+    for i in range(n):
+        # complete relation [i][...]
+        # relation[i] = np.norm(line_l[i] - line_r)
+        to_norm = left[i] - right
+        relation[i] = np.linalg.norm(to_norm, axis=1)  # norm([r, g, b]), norm([r, g, b])
+
+    return relation
 
 def getDepthMap(disparity, mode, B=None, f=None, norm=None):
     '''
@@ -102,7 +127,8 @@ def visualizeDepthMap(depth_map):
 
 if __name__ == '__main__':
     dataset = getDataset('tsukuba')
-    disparity = dataset.getDisparity()
+    # disparity = dataset.getDisparity()
+    disparity = getDisparityMap(dataset[0], dataset[4], method='DP')
     depth = getDepthMap(disparity, mode='Accurate', B = 1, f = 1)
 
     visualizeDepthMap(depth)
