@@ -1,3 +1,4 @@
+from typing import List
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
@@ -43,23 +44,7 @@ def DPsolver(relation, occlusionConstant=30):
     _, direction_map = getDPmap_DirectionMap(relation, occlusionConstant)
     # direction_map, 1: right, 2: right down, 3: down
 
-    # visualizeDepthMap(direction_map)
-    path = []
-    i_trace = n-1
-    j_trace = n-1
-    while i_trace != 0 or j_trace != 0:
-        direction = direction_map[i_trace][j_trace]
-        direction_map[i_trace][j_trace] = 10  # highlight the path
-
-        path += [direction]
-        if direction == 1:
-            j_trace -= 1
-        elif direction == 2:
-            i_trace -= 1
-            j_trace -= 1
-        elif direction == 3:
-            i_trace -= 1
-
+    path = getDPpath(direction_map)
     # visualizeDepthMap(direction_map)
 
     # Path to Disparity: p.left_pixel - p.right_pixel
@@ -71,7 +56,6 @@ def DPsolver(relation, occlusionConstant=30):
     ################################
 
     disparity_line = np.zeros(n, dtype=np.int8)
-    path = path[::-1]  # inverse path, from start to end
     # disparity = 0
     i_trace = 0
     j_trace = 0
@@ -129,6 +113,34 @@ def getDPmap_DirectionMap(relation, occlusionConstant):
                 direction_map[i][j] = 1
 
     return DPmap, direction_map
+
+def getDPpath(direction_map: np.ndarray) -> List[int]:
+    '''
+    return list of directions
+        from top left to button right
+    * Note that: this will also highlight the PATH on direction_map
+        direction_map[path_pixel] = 10
+    '''
+    n = direction_map.shape[0]
+    path = []
+
+    i_trace = n-1
+    j_trace = n-1
+    while i_trace != 0 or j_trace != 0:
+        direction = direction_map[i_trace][j_trace]
+        direction_map[i_trace][j_trace] = 10  # highlight the path
+
+        path += [direction]
+        if direction == 1:
+            j_trace -= 1
+        elif direction == 2:
+            i_trace -= 1
+            j_trace -= 1
+        elif direction == 3:
+            i_trace -= 1
+    
+    path = path[::-1]  # inverse path, from start to end
+    return path
 
 def getRelation(line_l, line_r):
     '''
