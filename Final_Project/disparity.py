@@ -40,32 +40,9 @@ def DPsolver(relation, occlusionConstant=30):
     return line disparity
     '''
     n = relation.shape[0]
-    DPmap = np.zeros((relation.shape))
-    direction_map = np.zeros((relation.shape), dtype=np.uint8)
-    # 1: right, 2: right down, 3: down
-    for i in range(n):
-        DPmap[i][0] = relation[i][0]    # fill left edge
-        direction_map[i][0] = 3     # direction down
-        DPmap[0][i] = relation[0][i]    # fill right edge
-        direction_map[0][i] = 1     # direction right
+    _, direction_map = getDPmap_DirectionMap(relation, occlusionConstant)
+    # direction_map, 1: right, 2: right down, 3: down
 
-    for i in range(1, n):
-        for j in range(1, n):
-            DPmap[i][j] = min(
-                DPmap[i-1][j-1] + relation[i][j],       # No occlusion
-                DPmap[i-1][j  ] + occlusionConstant,    # Occluded from left,
-                                    # right can see, left cannot see
-                DPmap[i  ][j-1] + occlusionConstant     # Occluded from right
-            )
-            # Direction map
-            if DPmap[i][j] == DPmap[i-1][j-1] + relation[i][j]:
-                direction_map[i][j] = 2
-            elif DPmap[i][j] == DPmap[i-1][j  ] + occlusionConstant:
-                direction_map[i][j] = 3
-            elif DPmap[i][j] == DPmap[i  ][j-1] + occlusionConstant:
-                direction_map[i][j] = 1
-
-    # visualizeDepthMap(DPmap)
     # visualizeDepthMap(direction_map)
     path = []
     i_trace = n-1
@@ -124,6 +101,35 @@ def DPsolver(relation, occlusionConstant=30):
 
     return disparity_line
 
+def getDPmap_DirectionMap(relation, occlusionConstant):
+    n = relation.shape[0]
+    DPmap = np.zeros((relation.shape))
+    direction_map = np.zeros((relation.shape), dtype=np.uint8)
+    # 1: right, 2: right down, 3: down
+    for i in range(n):
+        DPmap[i][0] = relation[i][0]    # fill left edge
+        direction_map[i][0] = 3     # direction down
+        DPmap[0][i] = relation[0][i]    # fill right edge
+        direction_map[0][i] = 1     # direction right
+
+    for i in range(1, n):
+        for j in range(1, n):
+            val2 = DPmap[i-1][j-1] + relation[i][j]     # No occlusion
+            val3 = DPmap[i-1][j  ] + occlusionConstant  # Occluded from left
+                                    # right can see, left cannot see
+            val1 = DPmap[i  ][j-1] + occlusionConstant  # Occluded from right
+
+            DPmap[i][j] = min(val1, val2, val3)
+            # Direction map
+            if DPmap[i][j] == val2:
+                direction_map[i][j] = 2
+            elif DPmap[i][j] == val3:
+                direction_map[i][j] = 3
+            elif DPmap[i][j] == val1:
+                direction_map[i][j] = 1
+
+    return DPmap, direction_map
+
 def getRelation(line_l, line_r):
     '''
     line_l, line_r: ndarray(width, 3)
@@ -145,6 +151,7 @@ def getRelation(line_l, line_r):
 
     return relation
 
+# Build Depth map from disparity
 def getDepthMap(disparity, mode, B=None, f=None, norm=None):
     '''
     calculate depth map from disparity map
