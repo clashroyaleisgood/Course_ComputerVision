@@ -14,15 +14,24 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
         return disparityDPmethod(image_l, image_r)
 
 def disparityDPmethod(image_l, image_r):
+    disparity = np.zeros((image_l.shape))
     for line in range(image_l.shape[0]):
         relation = getRelation(image_l[line], image_r[line])
-        # DP solver
+        DPsolver(relation)
+
+def DPsolver(relation):
+    '''
+    return line disparity
+    '''
+    return np.zeros(relation.shape[0])
 
 def getRelation(line_l, line_r):
     '''
     line_l, line_r: ndarray(width, 3)
     return relation
-    relation[i][j] = norm(line_l[i] - line_r[j])
+    #
+    relation[i][j] = norm(line_r[i] - line_l[j])  # as text book
+    #
     '''
     n = line_l.shape[0]
     left = np.copy(line_l).astype(np.float)
@@ -31,8 +40,8 @@ def getRelation(line_l, line_r):
 
     for i in range(n):
         # complete relation [i][...]
-        # relation[i] = np.norm(line_l[i] - line_r)
-        to_norm = left[i] - right
+        # relation[i] = np.norm(line_r[i] - line_l)
+        to_norm = right[i] - left
         relation[i] = np.linalg.norm(to_norm, axis=1)  # norm([r, g, b]), norm([r, g, b])
 
     return relation
