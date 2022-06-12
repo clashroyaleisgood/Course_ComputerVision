@@ -11,19 +11,118 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
     '''
     # some_block_search_implementation(image_l, image_r)
     if method == 'DP':
-        return disparityDPmethod(image_l, image_r)
+        disparity = disparityDPmethod(image_l, image_r)  # -13 ~ 67
+        # visualizeDepthMap(disparity)
+
+        # to_save = disparity - disparity.min()
+        # to_save = to_save.astype(np.uint8)
+        # cv2.imwrite('Final_Project\\report\\disp_temp.jpg', to_save)
+
+        # disparity = cv2.imread('Final_Project\\report\\disp_temp.jpg', cv2.IMREAD_GRAYSCALE)
+
+        return disparity
 
 def disparityDPmethod(image_l, image_r):
-    disparity = np.zeros((image_l.shape))
-    for line in range(image_l.shape[0]):
-        relation = getRelation(image_l[line], image_r[line])
-        DPsolver(relation)
+    disparity = np.zeros((image_l.shape[:2]), dtype=np.int8)
+    for i in range(image_l.shape[0]):
+        if i % 10 == 0:
+            print(f'line {i}')
+        # i = 100
+        relation = getRelation(image_l[i], image_r[i])
+        # visualizeDepthMap(relation)
+        disparity[i] = DPsolver(relation)
 
-def DPsolver(relation):
+    print('end disp DP')
+    return disparity
+
+def DPsolver(relation, occlusionConstant=30):
     '''
     return line disparity
     '''
-    return np.zeros(relation.shape[0])
+    n = relation.shape[0]
+    DPmap = np.zeros((relation.shape))
+    direction_map = np.zeros((relation.shape), dtype=np.uint8)
+    # 1: right, 2: right down, 3: down
+    for i in range(n):
+        DPmap[i][0] = relation[i][0]    # fill left edge
+        direction_map[i][0] = 3     # direction down
+        DPmap[0][i] = relation[0][i]    # fill right edge
+        direction_map[0][i] = 1     # direction right
+
+    for i in range(1, n):
+        for j in range(1, n):
+            DPmap[i][j] = min(
+                DPmap[i-1][j-1] + relation[i][j],       # No occlusion
+                DPmap[i-1][j  ] + occlusionConstant,    # Occluded from left,
+                                    # right can see, left cannot see
+                DPmap[i  ][j-1] + occlusionConstant     # Occluded from right
+            )
+            # Direction map
+            if DPmap[i][j] == DPmap[i-1][j-1] + relation[i][j]:
+                direction_map[i][j] = 2
+            elif DPmap[i][j] == DPmap[i-1][j  ] + occlusionConstant:
+                direction_map[i][j] = 3
+            elif DPmap[i][j] == DPmap[i  ][j-1] + occlusionConstant:
+                direction_map[i][j] = 1
+
+    # visualizeDepthMap(DPmap)
+    # visualizeDepthMap(direction_map)
+    path = []
+    i_trace = n-1
+    j_trace = n-1
+    while i_trace != 0 or j_trace != 0:
+        direction = direction_map[i_trace][j_trace]
+        direction_map[i_trace][j_trace] = 10  # highlight the path
+
+        path += [direction]
+        if direction == 1:
+            j_trace -= 1
+        elif direction == 2:
+            i_trace -= 1
+            j_trace -= 1
+        elif direction == 3:
+            i_trace -= 1
+
+    # visualizeDepthMap(direction_map)
+
+    # Path to Disparity: p.left_pixel - p.right_pixel
+    ### Three Strategy ###
+    # path is longer than disp_line..., so
+    # 1. disp_line = compress(path), 將長度縮小，中間取插植
+    # 2. disp_line = path[a:b +n], 取中間 disp 長度的資料
+    # 3. disp_line = {left_p} - right_p, 只記錄左邊有移動的 disp # choose this
+    ################################
+
+    disparity_line = np.zeros(n, dtype=np.int8)
+    path = path[::-1]  # inverse path, from start to end
+    # disparity = 0
+    i_trace = 0
+    j_trace = 0
+    # right: disparity +=1, down: disparity -=1
+    for direction in path:
+        if direction == 2:  # matched
+            disp = j_trace - i_trace  # left - right
+            disparity_line[j_trace] = disp
+            j_trace += 1
+            i_trace += 1
+        elif direction == 1:
+            # right occ: left can see, right cannot see
+            j_trace += 1
+            # disparity_line[j_trace] = righter value
+        elif direction == 3:
+            # left occ: right can see, left cannot see
+            i_trace += 1
+
+    # filled in empty values
+    # filled right occ places, left can see, right cannot see
+    righter_value = 0
+    for i in range(n-1, -1, -1):
+        if disparity_line[i] != 0:
+            righter_value = disparity_line[i]
+        else:
+            disparity_line[i] = righter_value
+
+    return disparity_line
 
 def getRelation(line_l, line_r):
     '''
@@ -122,7 +221,7 @@ def showHistogram(image):
     plt.xlim([0, 256])
     plt.show()
 
-def visualizeDepthMap(depth_map):
+def visualizeDepthMap(depth_map, ground_truth=None):
     '''
     HW1 tools
     '''
@@ -132,12 +231,24 @@ def visualizeDepthMap(depth_map):
     plt.title('Depth map')
     plt.xlabel('X Pixel')
     plt.ylabel('Y Pixel')
+
+    if ground_truth is not None:
+        plt.figure()
+        plt.imshow(ground_truth)
+        plt.colorbar(label='Distance to Camera')
+        plt.title('Ground truth')
+        plt.xlabel('X Pixel')
+        plt.ylabel('Y Pixel')
+
     plt.show()
 
 if __name__ == '__main__':
     dataset = getDataset('tsukuba')
     # disparity = dataset.getDisparity()
     disparity = getDisparityMap(dataset[0], dataset[4], method='DP')
-    depth = getDepthMap(disparity, mode='Accurate', B = 1, f = 1)
+    depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
 
-    visualizeDepthMap(depth)
+    g_disparity = dataset.getDisparity()
+    g_depth = getDepthMap(g_disparity, mode='Related', norm=normalizeImage)
+
+    visualizeDepthMap(depth, ground_truth=g_depth)
