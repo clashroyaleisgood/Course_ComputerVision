@@ -16,7 +16,7 @@ class Dataset:
         self.disparityImagePath = None
 
     def getPaths(self):
-        print('path1')
+        # print('path1')
         datasetFolderPath = os.path.join(
             os.path.dirname(__file__), 'Dataset', self.folder_name)
         self.stereoFolderPath = os.path.join(datasetFolderPath, 'stereo')
