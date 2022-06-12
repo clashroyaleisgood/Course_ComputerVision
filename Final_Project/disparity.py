@@ -13,6 +13,7 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
     # some_block_search_implementation(image_l, image_r)
     if method == 'DP':
         disparity = disparityDPmethod(image_l, image_r)  # -13 ~ 67
+        disparity[disparity < 0] = 0  # must be larger than 0 ?
         # visualizeDepthMap(disparity)
 
         # to_save = disparity - disparity.min()
@@ -55,33 +56,7 @@ def DPsolver(relation, occlusionConstant=30):
     # 3. disp_line = {left_p} - right_p, 只記錄左邊有移動的 disp # choose this
     ################################
 
-    disparity_line = np.zeros(n, dtype=np.int8)
-    # disparity = 0
-    i_trace = 0
-    j_trace = 0
-    # right: disparity +=1, down: disparity -=1
-    for direction in path:
-        if direction == 2:  # matched
-            disp = j_trace - i_trace  # left - right
-            disparity_line[j_trace] = disp
-            j_trace += 1
-            i_trace += 1
-        elif direction == 1:
-            # right occ: left can see, right cannot see
-            j_trace += 1
-            # disparity_line[j_trace] = righter value
-        elif direction == 3:
-            # left occ: right can see, left cannot see
-            i_trace += 1
-
-    # filled in empty values
-    # filled right occ places, left can see, right cannot see
-    righter_value = 0
-    for i in range(n-1, -1, -1):
-        if disparity_line[i] != 0:
-            righter_value = disparity_line[i]
-        else:
-            disparity_line[i] = righter_value
+    disparity_line = getDPdisparityLine_Left(path, n)
 
     return disparity_line
 
@@ -141,6 +116,41 @@ def getDPpath(direction_map: np.ndarray) -> List[int]:
     
     path = path[::-1]  # inverse path, from start to end
     return path
+
+def getDPdisparityLine_Left(path: List[int], n):
+    '''
+    return line disparity of shape(n)
+
+    Strategy 3. disp_line = {left_p} - right_p, 只記錄左邊有移動的 disp # choose this
+    '''
+    disparity_line = np.zeros(n, dtype=np.int8)
+    i_trace = 0
+    j_trace = 0
+
+    for direction in path:
+        if direction == 2:  # matched
+            disp = j_trace - i_trace  # left - right
+            disparity_line[j_trace] = disp
+            j_trace += 1
+            i_trace += 1
+        elif direction == 1:
+            # right occ: left can see, right cannot see
+            j_trace += 1
+            # disparity_line[j_trace] = righter value
+        elif direction == 3:
+            # left occ: right can see, left cannot see
+            i_trace += 1
+
+    # filled in empty values
+    # filled right occ places, left can see, right cannot see
+    righter_value = 0
+    for i in range(n-1, -1, -1):
+        if disparity_line[i] != 0:
+            righter_value = disparity_line[i]
+        else:
+            disparity_line[i] = righter_value
+
+    return disparity_line
 
 def getRelation(line_l, line_r):
     '''
