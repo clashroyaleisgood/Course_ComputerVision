@@ -1,5 +1,6 @@
 from typing import List
 import numpy as np
+from scipy import interpolate
 import cv2
 from matplotlib import pyplot as plt
 from datasets import getDataset
@@ -14,6 +15,7 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
     if method == 'DP':
         disparity = disparityDPmethod(image_l, image_r)  # -13 ~ 67
         disparity[disparity < 0] = 0  # must be larger than 0 ?
+        disparity = disparity.astype(np.uint8)
         # visualizeDepthMap(disparity)
 
         # to_save = disparity - disparity.min()
@@ -56,7 +58,8 @@ def DPsolver(relation, occlusionConstant=30):
     # 3. disp_line = {left_p} - right_p, 只記錄左邊有移動的 disp # choose this
     ################################
 
-    disparity_line = getDPdisparityLine_Left(path, n)
+    # disparity_line = getDPdisparityLine_Left(path, n)
+    disparity_line = getDPdisparityLine_All(path, n)
 
     return disparity_line
 
@@ -151,6 +154,31 @@ def getDPdisparityLine_Left(path: List[int], n):
             disparity_line[i] = righter_value
 
     return disparity_line
+
+def getDPdisparityLine_All(path: List[int], n):
+    '''
+    Strategy 1
+    '''
+    disp_all = []
+    disp = 0
+    for dir in path:
+        if dir == 2:    # Matched
+            pass
+        elif dir == 1:  # right: pixel in left  image moves right
+            disp += 1
+        elif dir == 3:  # left:  pixel in right image moves right
+            disp -= 1
+        disp_all += [disp]
+
+    x = np.arange(len(path))  # 0 ~ 382, len = 383
+    disp_all = np.array(disp_all, dtype=np.float)
+
+    x_new = np.linspace(0, len(path) -1, n)  # fill in 0~383
+
+    interp = interpolate.interp1d(x, disp_all)
+    disp_new = interp(x_new)
+
+    return disp_new
 
 def getRelation(line_l, line_r):
     '''
