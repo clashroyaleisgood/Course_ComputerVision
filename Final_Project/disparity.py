@@ -39,6 +39,7 @@ def disparityDPmethod(image_l, image_r):
     print('end disp DP')
     return disparity
 
+# DP solver
 def DPsolver(relation, occlusionConstant=30):
     '''
     return line disparity
@@ -200,6 +201,7 @@ def getRelation(line_l, line_r):
         relation[i] = np.linalg.norm(to_norm, axis=1)  # norm([r, g, b]), norm([r, g, b])
 
     return relation
+# DP solver end
 
 # Build Depth map from disparity
 def getDepthMap(disparity, mode, B=None, f=None, norm=None):
@@ -236,13 +238,6 @@ def getDepthMap(disparity, mode, B=None, f=None, norm=None):
 
     return disparity
 
-def normalizeImage(image):
-    '''
-    norm image to 0~255
-    '''
-    image = (image - image.min()) / image.ptp() * 255
-    return image.astype(np.uint8)
-
 def getDisparityMin(disparity):
     '''
     disparity image will sometimes have a thick edge of black color(value = 0)
@@ -266,6 +261,14 @@ def getDisparityMin(disparity):
         return high_freq_values[1]
     else:
         return high_freq_values[0]
+# Build Depth map end
+
+def normalizeImage(image):
+    '''
+    norm image to 0~255
+    '''
+    image = (image - image.min()) / image.ptp() * 255
+    return image.astype(np.uint8)
 
 def showHistogram(image):
     hist = cv2.calcHist([image], [0], None, [256], [0, 256])  # 計算直方圖資訊
