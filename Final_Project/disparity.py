@@ -8,23 +8,24 @@ from datasets import getDataset
 def getDisparityMap(image_l, image_r, method='BlockSearch'):
     '''
     calculate disparity map from two
-    rectified images(epipolar lines are well aligned)
-    method in ['BlockSearch', 'DP']
+        rectified images(epipolar lines are well aligned)
+        method in ['BlockSearch', 'DP']
+    also stored at Final_Project\\Dataset\\disp_temp.jpg
     '''
     # some_block_search_implementation(image_l, image_r)
     if method == 'DP':
         disparity = disparityDPmethod(image_l, image_r)  # -13 ~ 67
-        disparity[disparity < 0] = 0  # must be larger than 0 ?
-        disparity = disparity.astype(np.uint8)
-        # visualizeDepthMap(disparity)
 
-        # to_save = disparity - disparity.min()
-        # to_save = to_save.astype(np.uint8)
-        # cv2.imwrite('Final_Project\\report\\disp_temp.jpg', to_save)
+    elif method == 'BlockSearch':
+        pass
 
-        # disparity = cv2.imread('Final_Project\\report\\disp_temp.jpg', cv2.IMREAD_GRAYSCALE)
+    disparity -= disparity.min()
+    disparity = disparity.astype(np.uint8)
+    # visualizeDepthMap(disparity)
 
-        return disparity
+    # disparity = cv2.imread('Final_Project\\report\\disp_temp.jpg', cv2.IMREAD_GRAYSCALE)
+
+    return disparity
 
 def disparityDPmethod(image_l, image_r):
     disparity = np.zeros((image_l.shape[:2]), dtype=np.int8)
@@ -59,8 +60,8 @@ def DPsolver(relation, occlusionConstant=30):
     # 3. disp_line = {left_p} - right_p, 只記錄左邊有移動的 disp # choose this
     ################################
 
-    # disparity_line = getDPdisparityLine_Left(path, n)
-    disparity_line = getDPdisparityLine_All(path, n)
+    disparity_line = getDPdisparityLine_Left(path, n)
+    # disparity_line = getDPdisparityLine_All(path, n)
 
     return disparity_line
 
@@ -204,9 +205,10 @@ def getRelation(line_l, line_r):
 # DP solver end
 
 # Build Depth map from disparity
-def getDepthMap(disparity, mode, B=None, f=None, norm=None):
+def getDepthMap(disparity, mode, B=None, f=None, norm=None):  # disparity map should > 0
     '''
     calculate depth map from disparity map
+    0 <= disparity <= 255
     mode: ['Accurate', 'Related']
     - Accurate:
         by formula: Z = f * B / d
@@ -220,17 +222,20 @@ def getDepthMap(disparity, mode, B=None, f=None, norm=None):
         normalize(image)
         param: norm
     '''
+    disparity[disparity == 0] = 1
+
     if mode == 'Accurate':
-        disp_min = getDisparityMin(disparity)       # needed?
-        disparity[disparity < disp_min] = disp_min  # needed?
+        # disp_min = getDisparityMin(disparity)       # needed?
+        # disparity[disparity < disp_min] = disp_min  # needed?
         disparity = (1 / disparity) * B * f
 
     elif mode == 'Related':
         # showHistogram(disparity)
 
-        disp_min = getDisparityMin(disparity)
-        disparity[disparity < disp_min] = disp_min  # this process makes edge black the SAME value as background
-        
+        # disp_min = getDisparityMin(disparity)
+        # disparity[disparity < disp_min] = disp_min  # this process makes edge black the SAME value as background
+        # disparity -= disparity.min()  # disparity map >= 0 already
+
         disparity = 1 / disparity
         disparity = norm(disparity)
 
@@ -257,10 +262,11 @@ def getDisparityMin(disparity):
 
     high_freq_values = sorted(high_freq_values)
 
-    if high_freq_values[0] < 5:
-        return high_freq_values[1]
-    else:
-        return high_freq_values[0]
+    if len(high_freq_values) < 3:
+        if high_freq_values[0] < 5:
+            return high_freq_values[1]
+        else:
+            return high_freq_values[0]
 # Build Depth map end
 
 def normalizeImage(image):
@@ -306,9 +312,12 @@ if __name__ == '__main__':
     dataset = getDataset('self_laptop')
     # disparity = dataset.getDisparity()
     disparity = getDisparityMap(dataset[0], dataset[1], method='DP')
+    cv2.imwrite('Final_Project\\Dataset\\disp_temp.jpg', disparity)
+
     depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
+    cv2.imwrite('Final_Project\\Dataset\\depth_temp.jpg', depth)
 
-    g_disparity = dataset.getDisparity()
-    g_depth = getDepthMap(g_disparity, mode='Related', norm=normalizeImage)
+    # g_disparity = dataset.getDisparity()
+    # g_depth = getDepthMap(g_disparity, mode='Related', norm=normalizeImage)
 
-    visualizeDepthMap(depth, ground_truth=g_depth)
+    visualizeDepthMap(depth)
