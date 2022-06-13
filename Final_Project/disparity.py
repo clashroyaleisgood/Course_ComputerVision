@@ -3,30 +3,35 @@ import numpy as np
 from scipy import interpolate
 import cv2
 from matplotlib import pyplot as plt
+import sys
+
 from datasets import getDataset
+from HW2_helper import img_to_gray
 
 def getDisparityMap(image_l, image_r, method='BlockSearch'):
     '''
     calculate disparity map from two
         rectified images(epipolar lines are well aligned)
         method in ['BlockSearch', 'DP']
-    also stored at Final_Project\\Dataset\\disp_temp.jpg
+    ~~also stored at Final_Project\\Dataset\\disp_temp.jpg~~
     '''
     # some_block_search_implementation(image_l, image_r)
     if method == 'DP':
         disparity = disparityDPmethod(image_l, image_r)  # -13 ~ 67
 
     elif method == 'BlockSearch':
-        pass
+        gray_l = img_to_gray(image_l)
+        gray_r = img_to_gray(image_r)
+        disparity = Get_Disparity_Map(gray_l, gray_r)
 
+    cv2.imwrite('Final_Project\\Dataset\\disp_origin.jpg', disparity)
     disparity -= disparity.min()
     disparity = disparity.astype(np.uint8)
     # visualizeDepthMap(disparity)
 
-    # disparity = cv2.imread('Final_Project\\report\\disp_temp.jpg', cv2.IMREAD_GRAYSCALE)
-
     return disparity
 
+# DP method
 def disparityDPmethod(image_l, image_r):
     disparity = np.zeros((image_l.shape[:2]), dtype=np.int8)
     for i in range(image_l.shape[0]):
@@ -40,7 +45,6 @@ def disparityDPmethod(image_l, image_r):
     print('end disp DP')
     return disparity
 
-# DP solver
 def DPsolver(relation, occlusionConstant=30):
     '''
     return line disparity
@@ -202,7 +206,56 @@ def getRelation(line_l, line_r):
         relation[i] = np.linalg.norm(to_norm, axis=1)  # norm([r, g, b]), norm([r, g, b])
 
     return relation
-# DP solver end
+# DP method end
+
+# Block Search: provided by Guo
+def Get_Disparity_Map(img1_gray,img2_gray):
+    Block_Size = 21
+    maxDis = int(img1_gray.shape[0]/16)
+    Half_Block_Size = int(Block_Size/2)
+
+    Disparity_Map = np.zeros_like(img1_gray)
+
+    #_DP = np.zeros((img1_gray.shape[0],img1_gray.shape[1],img2_gray.shape[1]))
+    #_DP = Get_DP(_DP,img1_gray,img2_gray)
+
+    for i in range(img1_gray.shape[0]):
+        for j in range(Half_Block_Size,img1_gray.shape[1]):
+            idx = -1
+            min = sys.float_info.max
+
+
+            border_top = Half_Block_Size if i -Half_Block_Size >= 0 else i
+            border_button = Half_Block_Size if i + Half_Block_Size <= img1_gray.shape[0]-1 else img1_gray.shape[0]-1-i
+
+            for k in range(j-maxDis , j+maxDis+1 ):
+                if(k<0 or k>img2_gray.shape[1]):
+                    continue
+                border_left = Half_Block_Size if j-Half_Block_Size >= 0 else j
+                border_left = border_left if k-border_left>=0 else k
+
+                border_right = Half_Block_Size if j+Half_Block_Size <= img1_gray.shape[1]-1 else img1_gray.shape[1]-1-j
+                border_right = border_right if k+border_right <= img1_gray.shape[1]-1 else img1_gray.shape[1]-1-k
+
+                #sum = np.sum(_DP[i-border_top : i+ border_button+1][j-border_left:j+border_right+1][k-border_left:k+border_right+1])/ (border_top + border_button+1)*(border_left+border_right+1)*()
+                #if(border_left * border_right * border_button * border_top > 0):
+                curMin = Min(img1_gray[i-border_top : i+ border_button+1, j-border_left:j+border_right+1], img2_gray[i-border_top : i+ border_button+1, k-border_left:k+border_right+1])
+
+                #print(str(i-border_top) + " " +  str(i+border_button+1) + " " + str(j-border_left) + " " + str(j+border_right+1 ) )
+                #print(str(i-border_top) + " " +  str(i+border_button+1) + " " + str(k-border_left) + " " + str(k+border_right+1 ) )
+                if(curMin < min):
+                    idx = k
+                    min = curMin
+
+            if(min is not sys.float_info.max):
+                Disparity_Map[i][j] = (idx - j) 
+    return Disparity_Map
+
+def Min(block_img1,block_img2):
+    sum = np.sum((block_img2 - block_img1)**2)/(block_img1.shape[0] * block_img1.shape[1])
+    #print(sum)
+    return sum
+# Block Search end
 
 # Build Depth map from disparity
 def getDepthMap(disparity, mode, B=None, f=None, norm=None):  # disparity map should > 0
@@ -309,14 +362,15 @@ def visualizeDepthMap(depth_map, ground_truth=None):
     plt.show()
 
 if __name__ == '__main__':
-    dataset = getDataset('self_laptop')
-    # disparity = dataset.getDisparity()
-    disparity = getDisparityMap(dataset[0], dataset[1], method='DP')
+    dataset = getDataset('tsukuba')
+
+    disparity = getDisparityMap(dataset[0], dataset[1], method='BlockSearch')
     cv2.imwrite('Final_Project\\Dataset\\disp_temp.jpg', disparity)
 
     depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
     cv2.imwrite('Final_Project\\Dataset\\depth_temp.jpg', depth)
 
+    # Ground Truth Disparity
     # g_disparity = dataset.getDisparity()
     # g_depth = getDepthMap(g_disparity, mode='Related', norm=normalizeImage)
 
