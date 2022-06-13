@@ -77,6 +77,15 @@ def splitGIT(folder_name):
 
     cap.release()
 
+def compress(folder_path, dsize):
+    for filename in os.listdir(folder_path):
+        fullpath = os.path.join(folder_path, filename)
+        print(f'relace {fullpath} to size ({dsize[1], dsize[0]})')
+        image = cv2.imread(fullpath)
+        image = cv2.resize(image, dsize, interpolation=cv2.INTER_AREA)
+        cv2.imwrite(fullpath, image)
+
 if __name__ == '__main__':
     # convert('tsukuba')
-    splitGIT('bull')
+    # splitGIT('bull')
+    compress('Final_Project\\Dataset\\self_library\\unrect', (400, 300))
