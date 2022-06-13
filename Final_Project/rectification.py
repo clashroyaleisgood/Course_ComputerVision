@@ -19,6 +19,29 @@ def rectify(image_l, image_r):
     - wrapPerspective(image_l, H1), ...
     https://www.andreasjakl.com/understand-and-apply-stereo-rectification-for-depth-maps-part-2/
     '''
+
+    points_l, points_r = getKeyPointPairs(image_l, image_r)
+    # points_l, points_r = cv2GetKeyPointPairs(image_l, image_r)
+
+    fundamental_matrix, inliers = cv2.findFundamentalMat(points_l, points_r, cv2.FM_RANSAC)
+
+    # We select only inlier points
+    points_l = points_l[inliers.ravel() == 1]
+    points_r = points_r[inliers.ravel() == 1]
+
+    # -------------------------------
+    h1, w1, _ = image_l.shape
+    h2, w2, _ = image_l.shape
+    _, H1, H2 = cv2.stereoRectifyUncalibrated(
+        np.float32(points_l), np.float32(points_r), fundamental_matrix, imgSize=(w1, h1)
+    )
+
+    image_l_rectified = cv2.warpPerspective(image_l, H1, (w1, h1))
+    image_r_rectified = cv2.warpPerspective(image_r, H2, (w2, h2))
+
+    return image_l_rectified, image_r_rectified
+
+def cv2GetKeyPointPairs(image_l, image_r):
     SIFT = cv2.SIFT_create()
 
     image_gray1 = img_to_gray(image_l)
@@ -47,44 +70,46 @@ def rectify(image_l, image_r):
             # Keep this keypoint pair
             points_l.append(kp1[m.queryIdx].pt)
             points_r.append(kp2[m.trainIdx].pt)
-    
-    # good_matches = RANSAC(matches, kp1, kp2)
-    # # [[p1, p1'], [p2, p2'], ...]
-    # print(f'RANSAC select {len(good_matches)} matches')
 
-    # points_l = []
-    # points_r = []
-    # for pt_l, pt_r in good_matches:
-    #     points_l += [pt_l]
-    #     points_r += [pt_r]
+    points_l = np.array(points_l, dtype=np.int32)
+    points_r = np.array(points_r, dtype=np.int32)
+    return points_l, points_r
 
-    # -------------------------------
+def getKeyPointPairs(image_l, image_r):
+    '''
+    input: (h, w, 3) images
+    output: points_l, points_r
+        l = [[x1 , y1 ], [x2 , y2 ], ...]
+        r = [[x1', y1'], [x2', y2'], ...]  corresponding position
+
+    '''
+    SIFT = cv2.SIFT_create()
+
+    image_gray1 = img_to_gray(image_l)
+    image_gray2 = img_to_gray(image_r)
+    kp1, f1 = SIFT.detectAndCompute(image_gray1, None)
+    kp2, f2 = SIFT.detectAndCompute(image_gray2, None)
+
+    # FLANN_INDEX_KDTREE = 1
+    # index_params = dict(algorithm=FLANN_INDEX_KDTREE, trees=5)
+    # search_params = dict(checks=50)   # or pass empty dictionary
+    # flann = cv2.FlannBasedMatcher(index_params, search_params)
+    # matches = flann.knnMatch(f1, f2, k=2)
+
+    matches = kNN(f1, f2)
+    print(f'kNN find {len(matches)} matches')
+
+    points_l = []
+    points_r = []
+
+    for ind1, ind2 in matches:
+        points_l += [kp1[ind1].pt]
+        points_r += [kp2[ind2].pt]
+
     points_l = np.array(points_l, dtype=np.int32)
     points_r = np.array(points_r, dtype=np.int32)
 
-    fundamental_matrix, inliers = cv2.findFundamentalMat(points_l, points_r, cv2.FM_RANSAC)
-
-    # We select only inlier points
-    points_l = points_l[inliers.ravel() == 1]
-    points_r = points_r[inliers.ravel() == 1]
-
-    # -------------------------------
-    h1, w1 = image_gray1.shape
-    h2, w2 = image_gray2.shape
-    _, H1, H2 = cv2.stereoRectifyUncalibrated(
-        np.float32(points_l), np.float32(points_r), fundamental_matrix, imgSize=(w1, h1)
-    )
-
-    # -------------------------------
-    # Undistort (rectify) the images and save them
-    # Adapted from: https://stackoverflow.com/a/62607343
-    image_l_rectified = cv2.warpPerspective(image_l, H1, (w1, h1))
-    image_r_rectified = cv2.warpPerspective(image_r, H2, (w2, h2))
-
-    return image_l_rectified, image_r_rectified
-
-def getFundamentalMatrix():
-    pass
+    return points_l, points_r
 
 def saveRectifiedImages(folder_name, image_l, image_r):
     folderpath = f'Final_Project\\Dataset\\{folder_name}\\stereo'
@@ -111,7 +136,7 @@ if __name__ == '__main__':
     image_r = dataset[1]
     image_l_rect, image_r_rect = rectify(image_l, image_r)
 
-    saveRectifiedImages('self_laptop', image_l_rect, image_r_rect)
+    saveRectifiedImages(folder_name, image_l_rect, image_r_rect)
     # plt.figure()
     # plt.imshow(image_l_rectified)
     # plt.title('left')
