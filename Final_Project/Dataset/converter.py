@@ -88,4 +88,4 @@ def compress(folder_path, dsize):
 if __name__ == '__main__':
     # convert('tsukuba')
     # splitGIT('bull')
-    compress('Final_Project\\Dataset\\self_library\\unrect', (400, 300))
+    compress('Final_Project\\Dataset\\self_laptop\\unrect', (1000, 750))

@@ -303,9 +303,9 @@ def visualizeDepthMap(depth_map, ground_truth=None):
     plt.show()
 
 if __name__ == '__main__':
-    dataset = getDataset('tsukuba')
+    dataset = getDataset('self_laptop')
     # disparity = dataset.getDisparity()
-    disparity = getDisparityMap(dataset[0], dataset[4], method='DP')
+    disparity = getDisparityMap(dataset[0], dataset[1], method='DP')
     depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
 
     g_disparity = dataset.getDisparity()
