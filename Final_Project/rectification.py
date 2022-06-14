@@ -3,7 +3,7 @@ import cv2
 from matplotlib import pyplot as plt
 import os
 
-from datasets import getDataset, getUnrectDataset
+from datasets import getUnrectDataset
 from HW2_helper import img_to_gray, kNN, RANSAC
 
 def rectify(image_l, image_r):
@@ -128,7 +128,7 @@ def saveRectifiedImages(folder_name, image_l, image_r):
     cv2.imwrite(os.path.join(folderpath, f'{folder_name}_2.jpg'), image_r)
 
 if __name__ == '__main__':
-    folder_name = 'self_laptop'
+    folder_name = 'self_NYCU'
 
     dataset = getUnrectDataset(folder_name)
 
