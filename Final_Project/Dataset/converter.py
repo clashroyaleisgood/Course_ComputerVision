@@ -43,7 +43,7 @@ def convert(folder_name):
 
         cv2.imwrite(os.path.join(NewDirectory, NewFilename), image)
 
-def splitGIT(folder_name):
+def splitGIF(folder_name):
     '''
     split *.gif
     to images/{folder_name}_[1, 2, 3, ...].jpg
@@ -87,5 +87,5 @@ def compress(folder_path, dsize):
 
 if __name__ == '__main__':
     # convert('tsukuba')
-    # splitGIT('bull')
+    # splitGIF('bull')
     compress('Final_Project\\Dataset\\self_laptop\\unrect', (1000, 750))
