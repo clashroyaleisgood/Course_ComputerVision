@@ -24,7 +24,6 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
         gray_r = img_to_gray(image_r)
         disparity = Get_Disparity_Map(gray_l, gray_r)
 
-    cv2.imwrite('Final_Project\\Dataset\\disp_origin.jpg', disparity)
     disparity -= disparity.min()
     disparity = disparity.astype(np.uint8)
     # visualizeDepthMap(disparity)
@@ -320,6 +319,7 @@ def getDisparityMin(disparity):
             return high_freq_values[1]
         else:
             return high_freq_values[0]
+    return 0
 # Build Depth map end
 
 def normalizeImage(image):
@@ -364,11 +364,13 @@ def visualizeDepthMap(depth_map, ground_truth=None):
 if __name__ == '__main__':
     dataset = getDataset('tsukuba')
 
-    disparity = getDisparityMap(dataset[0], dataset[1], method='BlockSearch')
-    cv2.imwrite('Final_Project\\Dataset\\disp_temp.jpg', disparity)
+    disparity = getDisparityMap(dataset[1], dataset[2], method='DP')
+    cv2.imwrite('Final_Project\\Dataset\\disp_result.jpg', disparity)  # doing disp - disp.min(), .astype(uint8)
+    cv2.imwrite('Final_Project\\Dataset\\disp_after_norm.jpg', normalizeImage(disparity))  # norm(disp) to [0~255]
 
-    depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)
-    cv2.imwrite('Final_Project\\Dataset\\depth_temp.jpg', depth)
+    # disparity = cv2.imread('Final_Project\\Dataset\\disp_origin.jpg', cv2.IMREAD_GRAYSCALE)
+    depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)  # use origin disparity( before norm )
+    cv2.imwrite('Final_Project\\Dataset\\depth_result.jpg', depth)
 
     # Ground Truth Disparity
     # g_disparity = dataset.getDisparity()
