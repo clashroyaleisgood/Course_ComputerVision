@@ -135,6 +135,7 @@ def getDPdisparityLine_Left(path: List[int], n):
     i_trace = 0
     j_trace = 0
 
+    disp = 0
     for direction in path:
         if direction == 2:  # matched
             disp = j_trace - i_trace  # left - right
@@ -143,20 +144,12 @@ def getDPdisparityLine_Left(path: List[int], n):
             i_trace += 1
         elif direction == 1:
             # right occ: left can see, right cannot see
+            disparity_line[j_trace] = disp
             j_trace += 1
             # disparity_line[j_trace] = righter value
         elif direction == 3:
             # left occ: right can see, left cannot see
             i_trace += 1
-
-    # filled in empty values
-    # filled right occ places, left can see, right cannot see
-    righter_value = 0
-    for i in range(n-1, -1, -1):
-        if disparity_line[i] != 0:
-            righter_value = disparity_line[i]
-        else:
-            disparity_line[i] = righter_value
 
     return disparity_line
 
