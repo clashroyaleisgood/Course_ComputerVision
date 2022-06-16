@@ -13,6 +13,7 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
     calculate disparity map from two
         rectified images(epipolar lines are well aligned)
         method in ['BlockSearch', 'DP']
+    return np.uint8 type
     ~~also stored at Final_Project\\Dataset\\disp_temp.jpg~~
     '''
     # some_block_search_implementation(image_l, image_r)
@@ -24,15 +25,15 @@ def getDisparityMap(image_l, image_r, method='BlockSearch'):
         gray_r = img_to_gray(image_r)
         disparity = Get_Disparity_Map(gray_l, gray_r)
 
-    disparity -= disparity.min()
-    disparity = disparity.astype(np.uint8)
+    # disparity -= disparity.min()
+    # disparity = disparity.astype(np.uint8)
     # visualizeDepthMap(disparity)
 
     return disparity
 
 # DP method
 def disparityDPmethod(image_l, image_r):
-    disparity = np.zeros((image_l.shape[:2]), dtype=np.int8)
+    disparity = np.zeros((image_l.shape[:2]), dtype=np.uint8)
     for i in range(image_l.shape[0]):
         if i % 10 == 0:
             print(f'line {i}')
@@ -73,27 +74,38 @@ def getDPmap_DirectionMap(relation, occlusionConstant):
     DPmap = np.zeros((relation.shape))
     direction_map = np.zeros((relation.shape), dtype=np.uint8)
     # 1: right, 2: right down, 3: down
-    for i in range(n):
-        DPmap[i][0] = relation[i][0]    # fill left edge
-        direction_map[i][0] = 3     # direction down
-        DPmap[0][i] = relation[0][i]    # fill right edge
-        direction_map[0][i] = 1     # direction right
+    DPmap[0][0] = 0
+    for i in range(1, n):
+        # DPmap[i][0] = relation[i][0] + occlusionConstant * i    # fill left edge
+        # direction_map[i][0] = 3     # direction down
+        # DPmap[0][i] = relation[0][i]    # fill right edge
+        # direction_map[0][i] = 1     # direction right
+
+        DPmap[i][0] = DPmap[i-1][0] + occlusionConstant
+        direction_map[i][0] = 3
+        DPmap[0][i] = DPmap[0][i-1] + occlusionConstant
+        direction_map[0][i] = 1
 
     for i in range(1, n):
         for j in range(1, n):
-            val2 = DPmap[i-1][j-1] + relation[i][j]     # No occlusion
-            val3 = DPmap[i-1][j  ] + occlusionConstant  # Occluded from left
-                                    # right can see, left cannot see
-            val1 = DPmap[i  ][j-1] + occlusionConstant  # Occluded from right
-
-            DPmap[i][j] = min(val1, val2, val3)
-            # Direction map
-            if DPmap[i][j] == val2:
-                direction_map[i][j] = 2
-            elif DPmap[i][j] == val3:
-                direction_map[i][j] = 3
-            elif DPmap[i][j] == val1:
+            if i > j:  # all pixels should moves left
+                DPmap[i][j] = DPmap[i  ][j-1] + occlusionConstant
                 direction_map[i][j] = 1
+
+            else:
+                val2 = DPmap[i-1][j-1] + relation[i][j]     # No occlusion
+                val3 = DPmap[i-1][j  ] + occlusionConstant  # Occluded from left
+                                        # right can see, left cannot see
+                val1 = DPmap[i  ][j-1] + occlusionConstant  # Occluded from right
+
+                DPmap[i][j] = min(val1, val2, val3)
+                # Direction map
+                if DPmap[i][j] == val2:
+                    direction_map[i][j] = 2
+                elif DPmap[i][j] == val3:
+                    direction_map[i][j] = 3
+                elif DPmap[i][j] == val1:
+                    direction_map[i][j] = 1
 
     return DPmap, direction_map
 
@@ -277,8 +289,8 @@ def getDepthMap(disparity, mode, B=None, f=None, norm=None):  # disparity map sh
     elif mode == 'Related':
         # showHistogram(disparity)
 
-        # disp_min = getDisparityMin(disparity)
-        # disparity[disparity < disp_min] = disp_min  # this process makes edge black the SAME value as background
+        disp_min = getDisparityMin(disparity)
+        disparity[disparity < disp_min] = disp_min  # this process makes edge black the SAME value as background
         # disparity -= disparity.min()  # disparity map >= 0 already
 
         disparity = 1 / disparity
@@ -307,12 +319,17 @@ def getDisparityMin(disparity):
 
     high_freq_values = sorted(high_freq_values)
 
-    if len(high_freq_values) < 3:
+    disp_min = 0
+    print(f'high freq:\n{high_freq_values}')
+    if len(high_freq_values) > 2:
         if high_freq_values[0] < 5:
-            return high_freq_values[1]
+            disp_min = high_freq_values[1]
+            # return high_freq_values[1]
         else:
-            return high_freq_values[0]
-    return 0
+            disp_min = high_freq_values[0]
+            # return high_freq_values[0]
+    print(f'disparity min: {disp_min}')
+    return disp_min
 # Build Depth map end
 
 def normalizeImage(image):
@@ -357,11 +374,14 @@ def visualizeDepthMap(depth_map, ground_truth=None):
 if __name__ == '__main__':
     dataset = getDataset('tsukuba')
 
-    disparity = getDisparityMap(dataset[1], dataset[2], method='DP')
-    cv2.imwrite('Final_Project\\Dataset\\disp_result.jpg', disparity)  # doing disp - disp.min(), .astype(uint8)
-    cv2.imwrite('Final_Project\\Dataset\\disp_after_norm.jpg', normalizeImage(disparity))  # norm(disp) to [0~255]
+    disparity = getDisparityMap(dataset[0], dataset[1], method='DP')
+    # visualizeDepthMap(disparity)
+
+    cv2.imwrite('Final_Project\\Dataset\\disp_origin.jpg', disparity)
+    cv2.imwrite('Final_Project\\Dataset\\disp_norm.jpg', normalizeImage(disparity))
 
     # disparity = cv2.imread('Final_Project\\Dataset\\disp_origin.jpg', cv2.IMREAD_GRAYSCALE)
+
     depth = getDepthMap(disparity, mode='Related', norm=normalizeImage)  # use origin disparity( before norm )
     cv2.imwrite('Final_Project\\Dataset\\depth_result.jpg', depth)
 
