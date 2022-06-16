@@ -111,18 +111,19 @@ def getKeyPointPairs(image_l, image_r):
 
     return points_l, points_r
 
-def saveRectifiedImages(folder_name, image_l, image_r):
+def saveRectifiedImages(folder_name, image_l, image_r, smaller_size=True):
     folderpath = f'Final_Project\\Dataset\\{folder_name}\\stereo'
     os.makedirs(folderpath, exist_ok=True)
 
-    width = 300  # prefect smaller image size
-    # image too large
-    if image_l.shape[1] > width:  # width
-        ratio = width / image_l.shape[1]  # image_size * ratio => smaller size
-        height = int(image_l.shape[0] * ratio)
+    if smaller_size:
+        width = 300  # prefect smaller image size
+        # image too large
+        if image_l.shape[1] > width:  # width
+            ratio = width / image_l.shape[1]  # image_size * ratio => smaller size
+            height = int(image_l.shape[0] * ratio)
 
-        image_l = cv2.resize(image_l, (width, height), interpolation=cv2.INTER_AREA)
-        image_r = cv2.resize(image_r, (width, height), interpolation=cv2.INTER_AREA)
+            image_l = cv2.resize(image_l, (width, height), interpolation=cv2.INTER_AREA)
+            image_r = cv2.resize(image_r, (width, height), interpolation=cv2.INTER_AREA)
 
     cv2.imwrite(os.path.join(folderpath, f'{folder_name}_1.jpg'), image_l)
     cv2.imwrite(os.path.join(folderpath, f'{folder_name}_2.jpg'), image_r)
