@@ -1,7 +1,7 @@
 # Report of lots of experiments
-- [Experiment: Visualization of DP method](Experiment-Visualization-of-DP-method)
-- [Experiment: DP method, different occlusion constant value](Experiment-DP-method-different-occlusion-constant-value)
-- [Experiment: Histogram post-processing](Experiment-Histogram-post-processing)
+- [Experiment: Visualization of DP method](#experiment-visualization-of-dp-method)
+- [Experiment: DP method, different occlusion constant value](#experiment-dp-method-different-occlusion-constant-value)
+- [Experiment: Histogram post-processing](#experiment-histogram-post-processing)
 
 
 ## Experiment: Visualization of DP method
@@ -25,7 +25,7 @@ direction: 2 means right down, 1 means right, 3 means down
 
 |relation map|DP map|DP direction map| path in direction map|
 |-|-|-|-|
-|![](exp_get_disparity\relation_map_line100.png)|![](exp_get_disparity\DP_map_line100.png)|![](exp_get_disparity\DP_direction_map_line100.png)|![](exp_get_disparity\DP_direction_map_line100_occ30.png)|
+|![](exp_get_disparity/relation_map_line100.png)|![](exp_get_disparity/DP_map_line100.png)|![](exp_get_disparity/DP_direction_map_line100.png)|![](exp_get_disparity/DP_direction_map_line100_occ30.png)|
 
 ## Experiment: DP method, different occlusion constant value
 ```
@@ -34,7 +34,7 @@ same image, same line
 
 |Occ 10|Occ 20|Occ 30|
 |-|-|-|
-|![](exp_get_disparity\DP_direction_map_line100_occ10.png)|![](exp_get_disparity\DP_direction_map_line100_occ20.png)|![](exp_get_disparity\DP_direction_map_line100_occ30.png)|
+|![](exp_get_disparity/DP_direction_map_line100_occ10.png)|![](exp_get_disparity/DP_direction_map_line100_occ20.png)|![](exp_get_disparity/DP_direction_map_line100_occ30.png)|
 
 ## Experiment: Histogram post-processing
 use Histogram to threshold the lower peak value( often with value: 0 )
@@ -53,8 +53,8 @@ disparity = dataset.getDisparity()
 
 |before|after|
 |-|-|
-|![](histogram\before_disp.jpg)|![](histogram\after_disp.jpg)|
-|![](histogram\before.png)|![](histogram\after.png)|
+|![](histogram/before_disp.jpg)|![](histogram/after_disp.jpg)|
+|![](histogram/before.png)|![](histogram/after.png)|
 
 ### Self-calculated disparity
 ```
@@ -73,5 +73,5 @@ disparity = getDisparityMap(image_l, image_r, method='DP')
 
 |before|after|
 |-|-|
-|![](hisgogram_my_disp\before_disp.jpg)|![](hisgogram_my_disp\after_disp.jpg)|
-|![](hisgogram_my_disp\before.png)|![](hisgogram_my_disp\after.png)|
+|![](hisgogram_my_disp/before_disp.jpg)|![](hisgogram_my_disp/after_disp.jpg)|
+|![](hisgogram_my_disp/before.png)|![](hisgogram_my_disp/after.png)|
