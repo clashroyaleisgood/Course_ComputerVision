@@ -2,6 +2,7 @@ import cv2
 import numpy as np
 import open3d as o3d
 import matplotlib.pyplot as plt
+import os
 
 image_row = 0
 image_col = 0
@@ -95,7 +96,8 @@ def get_LightSource(filepath):
 
 def iter_bmp_paths(filepath):
     for i in range(1, 7):
-        yield f'{filepath}pic{i}.bmp'
+        # yield f'{filepath}pic{i}.bmp'
+        yield os.path.join(filepath, f'pic{i}.bmp')
 
 def get_ImageMatrix(filepaths):
     '''
@@ -348,9 +350,10 @@ def get_CentralWeightMaps():
     return zs
 
 if __name__ == '__main__':
+    prefix = 'HW1_Photometric_Stereo' if True else ''
     target = 'bunny'  # bunny, star, venus
-    FolderPath = f'test/{target}/'
-    LightPath = f'{FolderPath}/LightSource.txt'
+    FolderPath = os.path.join(prefix, 'test', f'{target}')
+    LightPath = os.path.join(FolderPath, 'LightSource.txt')
     LightSource = get_LightSource(LightPath)
     LightInverse = SVD_inv(LightSource)
 
@@ -400,5 +403,5 @@ if __name__ == '__main__':
     # # showing the windows of all visualization function
     # plt.show()
 
-    save_ply(Z, f'{target}.ply')
-    show_ply(f'{target}.ply')
+    save_ply(Z, os.path.join(prefix, f'{target}.ply'))
+    show_ply(os.path.join(prefix, f'{target}.ply'))
