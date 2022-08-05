@@ -223,6 +223,9 @@ def average_Masks(mask1, mask2):
     for mask in Masks:
         total += mask
 
+    total[total < 1] = 1
+    # Prevent 'devided by zero' RuntimeWarning in `Masks[i] = Masks[i] / total`
+    # (0+0) / 1 == 0, don't affect result
     for i in range(2):
         Masks[i] = Masks[i] / total
         Masks[i] = Masks[i].astype(np.float) / 255.0
