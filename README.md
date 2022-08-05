@@ -2,16 +2,8 @@
 電腦視覺(英文授課) Computer Vision, in NCTU
 
 There are 3 homeworks(projects)
-- [Course_ComputerVision](#course_computervision)
-  - [Environment](#environment)
 - [HW1: Photometric Stereo](#hw1-photometric-stereo)
-  - [Introduction:](#introduction)
-  - [Result:](#result)
-  - [Detail:](#detail)
 - [HW2: Image Stitching](#hw2-image-stitching)
-  - [Introduction:](#introduction-1)
-  - [Result:](#result-1)
-  - [Detail:](#detail-1)
 - [Final Project: Depth Estimation from Stereo Images](#final-project-depth-estimation-from-stereo-images)
 
 ## Environment
@@ -88,6 +80,12 @@ Stitching many images
    ```
 
 # Final Project: Depth Estimation from Stereo Images
-Introduction: 
-Result: 
-Detail: 
+## Introduction:
+Estimate the depth from two images which is taken by **same** camera, with **same** direction but **different** horizontal location.  
+But I also use `image Rectification` to rectify two images that have differenct camera locatoin or direction into same direction and horizental movement only.
+
+## Result:
+just see: https://github.com/clashroyaleisgood/Course_ComputerVision/tree/main/Final_Project
+
+## Detail:
+just see: https://github.com/clashroyaleisgood/Course_ComputerVision/tree/main/Final_Project
