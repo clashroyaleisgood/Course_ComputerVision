@@ -1,9 +1,7 @@
 import cv2
 import numpy as np
 import matplotlib.pyplot as plt
-import random
-import math
-import sys
+import os
 
 # read the image file & output the color & gray image
 def read_img(path):
@@ -33,7 +31,7 @@ def im_show():
     cv2.destroyAllWindows()
 
 def get_PicturePath(prefix: str, i: int) -> str:
-    return f'{prefix}test/m{i}.jpg'
+    return os.path.join(prefix, 'test', f'm{i}.jpg')
 
 def dist(feature1, featureImage2):
     '''
@@ -300,7 +298,7 @@ def combine(image1, image2):
 
 
 if __name__ == '__main__':
-    prefix = 'HW2_Image_Stitching/' if True else ''
+    prefix = 'HW2_Image_Stitching' if True else ''
     SIFT = cv2.SIFT_create()
 
     images = []
@@ -310,11 +308,13 @@ if __name__ == '__main__':
         images += [image]
 
     image_01 = combine(images[0], images[1])
-    cv2.imwrite(f'{prefix}stitching_results/comb01.jpg', image_01)
+    cv2.imwrite(os.path.join(prefix, 'stitching_results', 'comb01.jpg'),
+                image_01)
 
     image_23 = combine(images[2], images[3])
     image_0123 = combine(image_01, image_23)
-    cv2.imwrite(f'{prefix}stitching_results/comb0123.jpg', image_0123)
+    cv2.imwrite(os.path.join(prefix, 'stitching_results', 'comb0123.jpg'),
+                image_0123)
 
     image_45 = combine(images[4], images[5])
     image_67 = combine(images[6], images[7])
@@ -325,4 +325,5 @@ if __name__ == '__main__':
     # for i in range(6, -1, -1):
     #     result = combine(images[i], result)
 
-    cv2.imwrite(f'{prefix}stitching_results/comb01234567.jpg', result)
+    cv2.imwrite(os.path.join(prefix, 'stitching_results', 'comb01234567.jpg'),
+                result)
