@@ -1,4 +1,4 @@
-# Final Project - Depth Estimation from Stereo Image
+# Final Project - Depth Estimation from Stereo Images
 [PDF Report](report/Final%20Project.pdf)   
 ![](report/hisgogram_my_disp/after_disp.jpg)
 
